@@ -49,9 +49,9 @@ function AddTransaction() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans antialiased p-6 md:p-10">
       <div className="max-w-xl mx-auto">
-        
+
         {/* Back Button */}
-        <button 
+        <button
           onClick={() => navigate('/dashboard')}
           className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-6 group"
         >
@@ -61,7 +61,7 @@ function AddTransaction() {
 
         {/* Core Layout Card */}
         <div className="bg-white border border-slate-200/70 shadow-xl rounded-2xl p-6 md:p-8">
-          
+
           {/* Header */}
           <div className="mb-6">
             <h2 className="text-xl font-bold text-slate-900">Add Transaction</h2>
@@ -90,27 +90,27 @@ function AddTransaction() {
           {/* VIEW 1: MANUAL FORM LAYER */}
           {method === 'manual' && (
             <form onSubmit={(e) => { e.preventDefault(); alert('Transaction saved!'); navigate('/dashboard'); }} className="space-y-5">
-              
+
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Flow Parameter</label>
                 <div className="grid grid-cols-3 gap-3">
-                  <button 
-                    type="button" 
-                    onClick={() => setFormData({...formData, type: 'expense'})}
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, type: 'expense' })}
                     className={`py-2.5 rounded-xl border font-semibold text-sm flex items-center justify-center gap-2 transition-all ${formData.type === 'expense' ? 'bg-rose-50 border-rose-200 text-rose-700 ring-4 ring-rose-50' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
                   >
                     Expense
                   </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setFormData({...formData, type: 'income'})}
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, type: 'income' })}
                     className={`py-2.5 rounded-xl border font-semibold text-sm flex items-center justify-center gap-2 transition-all ${formData.type === 'income' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 ring-4 ring-emerald-50' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
                   >
                     Income
                   </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setFormData({...formData, type: 'transfer'})}
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, type: 'transfer' })}
                     className={`py-2.5 rounded-xl border font-semibold text-sm flex items-center justify-center gap-2 transition-all ${formData.type === 'transfer' ? 'bg-blue-50 border-blue-200 text-blue-700 ring-4 ring-blue-50' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
                   >
                     Transfer
@@ -120,7 +120,7 @@ function AddTransaction() {
 
               <div>
                 <label htmlFor="amount" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Absolute Magnitude (INR)</label>
-                <input 
+                <input
                   type="number" id="amount" placeholder="₹ 0.00" value={formData.amount} onChange={handleChange} required
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-slate-900 transition-all font-semibold"
                 />
@@ -128,12 +128,24 @@ function AddTransaction() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="category" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Category Vector</label>
-                  <select id="category" value={formData.category} onChange={handleChange} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-slate-700 transition-all font-medium">
-                    <option>Food & Provisions</option>
-                    <option>Infrastructure/Rent</option>
-                    <option>Transport Logistics</option>
-                    <option>Entertainment & Leisure</option>
+                  <label htmlFor="category" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                    Expense Category
+                  </label>
+                  <select
+                    id="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-slate-700 transition-all font-medium"
+                  >
+                    <option value="food_groceries">Food & Groceries</option>
+                    <option value="travel_cabs">Travel & Cabs</option>
+                    <option value="bills_recharges">Bills & Recharges</option>
+                    <option value="rent_pg">Rent & PG/Hostel</option>
+                    <option value="shopping">Shopping</option>
+                    <option value="movies_outings">Movies & Outings</option>
+                    <option value="education">Education & College</option>
+                    <option value="friend_transfers">Sent to Friends (UPI)</option>
+                    <option value="others">Others</option>
                   </select>
                 </div>
                 <div>
@@ -144,7 +156,7 @@ function AddTransaction() {
 
               <div>
                 <label htmlFor="description" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Descriptor Scope</label>
-                <input 
+                <input
                   type="text" id="description" placeholder="e.g., Grocery store payload" value={formData.description} onChange={handleChange} required
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-slate-900 transition-all"
                 />
@@ -159,7 +171,7 @@ function AddTransaction() {
           {/* VIEW 2: DUMMY AI CAMERA INTERFACE */}
           {method === 'camera' && (
             <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-2xl min-h-[340px] text-center relative overflow-hidden">
-              
+
               {/* Overlay Scanning Animation state elements */}
               {isScanning && (
                 <div className="absolute inset-0 bg-white/80 backdrop-blur-xs flex flex-col items-center justify-center z-10 animate-fade-in">
@@ -188,7 +200,7 @@ function AddTransaction() {
               </div>
               <h3 className="font-bold text-slate-900 text-base mb-1">Upload Receipt or Open Camera Viewfinder</h3>
               <p className="text-xs text-slate-400 max-w-xs mb-6">Drop structural image objects here or take a live picture to pass vectors to our dummy AI computer vision engine model parsing framework.</p>
-              
+
               <button
                 type="button"
                 onClick={handleSimulateScan}

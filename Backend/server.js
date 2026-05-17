@@ -5,6 +5,7 @@ const cors = require('cors');
 const env = require('dotenv');
 const User = require('./Models/User');
 const db = require('./db');
+const Transaction = require('./Models/transaction');
 env.config();
 app.use(express.json());
 app.use(cors());
@@ -45,6 +46,57 @@ app.post('/login', async (req, res) => {
         }
     } catch (err) {
         res.status(500).json({ error: "Login failed" });
+    }
+});
+
+//Transaction Routes
+app.get('/transactions', async (req, res) => {
+    try{
+        const transactions = await Transaction.find();
+        res.status(200).json(transactions);
+    }catch(err){
+        res.status(500).json({ error: "Failed to fetch transactions" });
+    }
+});
+
+app.post('/transaction/', async (req, res) => {
+    try{
+        const data = req.body;
+        const newTransaction = new Transaction(data);
+        const response = await newTransaction.save();
+        if(!response){
+            return res.status(500).json({ error: "Internal Error:Failed to save transaction" });
+        }
+        res.status(201).json({ message: "Transaction added successfully" });
+    }catch(err){
+        res.status(500).json({ error: "Failed to add transaction" });
+    }
+});
+
+app.put('/transaction/:id', async (req, res) => {
+    try{
+        const { id } = req.params;
+        const data = req.body;
+        const response = await Transaction.findByIdAndUpdate(id, data, { new: true });
+        if(!response){
+            return res.status(404).json({ error: "Transaction not found" });
+        }
+        res.status(200).json({ message: "Transaction updated successfully", transaction: response });
+    }catch(err){
+        res.status(500).json({ error: "Failed to update transaction" });
+    }
+});
+
+app.delete('/transaction/:id', async (req, res) => {
+    try{
+        const { id } = req.params;
+        const response = await Transaction.findByIdAndDelete(id);
+        if(!response){
+            return res.status(404).json({ error: "Transaction not found" });
+        }
+        res.status(200).json({ message: "Transaction deleted successfully" });
+    }catch(err){
+        res.status(500).json({ error: "Failed to delete transaction" });
     }
 });
 
