@@ -12,6 +12,7 @@ import BillsAndEMIs from '../Components/Pages/Bills&EMIs';
 import Udhar from '../Components/Pages/Udhar';
 import Settings from '../Components/Pages/Settings';
 import Subscription from '../Components/Pages/Subscriptions';
+import Calculator from '../Components/Pages/Calculator';
 
 function App() {
   // Toggle this flag manually to change development layout views
@@ -40,6 +41,7 @@ function App() {
           <Route path='/Udhar' element={<Udhar />} />
           <Route path='/settings' element={<Settings />} />
           <Route path='/Subscription' element={<Subscription />} />
+          <Route path='/Calculator' element={<Calculator />} />
         </Route>
       </Routes>
     </Router>

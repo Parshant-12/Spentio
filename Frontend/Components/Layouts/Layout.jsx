@@ -10,7 +10,8 @@ import {
   HandCoins, 
   Settings, 
   ShieldCheck, 
-  LogOut 
+  LogOut, 
+  Calculator
 } from 'lucide-react';
 
 function Layout() {
@@ -96,6 +97,12 @@ function Layout() {
                   label="Create Budget" 
                   active={location.pathname === '/Budget'} 
                   onClick={() => navigate('/Budget')} 
+                />
+                <SidebarLink 
+                  icon={<Calculator size={18} />} 
+                  label="Calculator" 
+                  active={location.pathname === '/Calculator'} 
+                  onClick={() => navigate('/Calculator')} 
                 />
               </nav>
             </div>

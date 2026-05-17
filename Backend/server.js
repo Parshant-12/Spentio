@@ -6,6 +6,7 @@ const env = require('dotenv');
 const User = require('./Models/User');
 const db = require('./db');
 const Transaction = require('./Models/transaction');
+const Udhar = require('./Models/Udhar');
 env.config();
 app.use(express.json());
 app.use(cors());
@@ -59,7 +60,7 @@ app.get('/transactions', async (req, res) => {
     }
 });
 
-app.post('/transaction/', async (req, res) => {
+app.post('/transactions', async (req, res) => {
     try{
         const data = req.body;
         const newTransaction = new Transaction(data);
@@ -81,7 +82,7 @@ app.put('/transaction/:id', async (req, res) => {
         if(!response){
             return res.status(404).json({ error: "Transaction not found" });
         }
-        res.status(200).json({ message: "Transaction updated successfully", transaction: response });
+        res.status(200).json({ message: "Transaction updated successfully" });
     }catch(err){
         res.status(500).json({ error: "Failed to update transaction" });
     }
@@ -97,6 +98,57 @@ app.delete('/transaction/:id', async (req, res) => {
         res.status(200).json({ message: "Transaction deleted successfully" });
     }catch(err){
         res.status(500).json({ error: "Failed to delete transaction" });
+    }
+});
+
+//Udhar Routes
+app.get('/udhars', async (req, res) => {
+    try{
+        const udhars = await Udhar.find();
+        res.status(200).json(udhars);
+    }catch(err){
+        res.status(500).json({ error: "Failed to fetch udhars" });
+    }
+});
+
+app.post('/udhar', async (req, res) => {
+    try{
+        const data = req.body;
+        const newUdhar = new Udhar(data);
+        const response = await newUdhar.save();
+        if(!response){
+            return res.status(500).json({ error: "Internal Error:Failed to save udhar" });
+        }
+        res.status(201).json({ message: "Udhar added successfully" });
+    }catch(err){
+        res.status(500).json({ error: "Failed to add udhar" });
+    }
+});
+
+app.put('/udhar/:id', async (req, res) => {
+    try{
+        const { id } = req.params;
+        const data = req.body;
+        const response = await Udhar.findByIdAndUpdate(id, data, { new: true });
+        if(!response){
+            return res.status(404).json({ error: "Udhar not found" });
+        }
+        res.status(200).json({ message: "Udhar updated successfully" });
+    }catch(err){
+        res.status(500).json({ error: "Failed to update udhar" });
+    }
+});
+
+app.delete('/udhar/:id', async (req, res) => {
+    try{
+        const { id } = req.params;
+        const response = await Udhar.findByIdAndDelete(id);
+        if(!response){
+            return res.status(404).json({ error: "Udhar not found" });
+        }
+        res.status(200).json({ message: "Udhar deleted successfully" });
+    }catch(err){
+        res.status(500).json({ error: "Failed to delete udhar" });
     }
 });
 
