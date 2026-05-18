@@ -21,3 +21,5 @@ Spent.io is a user-friendly expense management website built using the MERN stac
 * **Database:** MongoDB with Mongoose ORM.
 
 ---
+
+### **Currently under development..**
