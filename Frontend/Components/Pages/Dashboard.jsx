@@ -25,7 +25,7 @@ function Dashboard() {
           <p className="text-sm text-slate-500 mt-0.5">Metrics, behaviors, and ledger positions.</p>
         </div>
         <button 
-          onClick={() => navigate('/Add-Transaction')}
+          onClick={() => navigate('/AddTransaction')}
           className="flex items-center justify-center gap-2 bg-indigo-600 px-4 py-2.5 rounded-xl text-white font-medium text-sm shadow-sm hover:bg-indigo-700 hover:shadow transition-all duration-200"
         >
           <PlusCircle size={16} /> New Transaction

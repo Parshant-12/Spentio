@@ -59,6 +59,24 @@ app.get('/transactions', async (req, res) => {
         res.status(500).json({ error: "Failed to fetch transactions" });
     }
 });
+app.get('/transactions/filter/:type', async (req, res) => {
+    try{
+        const { type } = req.params;
+        const transactions = await Transaction.find({ type: type });
+        res.status(200).json(transactions);
+    }catch(err){
+        res.status(500).json({ error: "Failed to fetch transactions" });
+    }
+});
+app.get('/transactions/search/:searchTerm', async (req, res) => {
+    try{
+        const { searchTerm } = req.params;
+        const transactions = await Transaction.find({ description: { $regex: searchTerm, $options: 'i' } });
+        res.status(200).json(transactions);
+    }catch(err){
+        res.status(500).json({ error: "Failed to fetch transactions" });
+    }
+});
 
 app.post('/transactions', async (req, res) => {
     try{

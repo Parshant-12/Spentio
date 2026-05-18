@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PenTool, Camera, Sparkles, UploadCloud, Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { ToastContainer, toast } from 'react-toastify';
 
 function AddTransaction() {
   const navigate = useNavigate();
@@ -8,37 +9,74 @@ function AddTransaction() {
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
 
-  // Form State
+  // Form State - Upgraded with transfer fields
   const [formData, setFormData] = useState({
     amount: '',
-    type: 'expense',
-    category: 'Food & Provisions',
+    type: '', // 'expense' | 'income' | 'transfer'
+    category: '',
     date: new Date().toISOString().split('T')[0],
-    description: ''
+    description: '',
+    fromAccount: '',
+    toAccount: ''
   });
+
+  // Automatically reset category/accounts to safe defaults when transaction type shifts
+  useEffect(() => {
+    if (formData.type === 'expense') {
+      setFormData(prev => ({ ...prev, category: 'food_groceries' }));
+    } else if (formData.type === 'income') {
+      setFormData(prev => ({ ...prev, category: 'salary' }));
+    }
+  }, [formData.type]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (formData.type !== 'transfer') {
+        delete formData.fromAccount;
+        delete formData.toAccount;
+      }
+      else if(formData.type === 'transfer') {
+        delete formData.category;
+      }
+      const response = await fetch('http://localhost:3000/transactions', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      if (response.ok) {
+        toast.success('Transaction added successfully!');
+        navigate('/dashboard');
+      } else {
+        toast.error('Failed to add transaction. Please try again.');
+      }
+    }
+    catch (error) {
+      console.error('Error saving transaction:', error);
+    }
+  }
 
   // Mock AI OCR Camera Scanner Engine
   const handleSimulateScan = () => {
     setIsScanning(true);
     setScanComplete(false);
 
-    // Simulate network/OCR execution time
     setTimeout(() => {
       setIsScanning(false);
       setScanComplete(true);
-      // Populate state with mock extracted data from the "receipt"
       setFormData({
         amount: '450.00',
         type: 'expense',
-        category: 'Food & Provisions',
+        category: 'food_groceries',
         date: '2026-05-17',
-        description: 'Starbucks Coffee & Sandwich (AI Scanned)'
+        description: 'Starbucks Coffee & Sandwich (AI Scanned)',
+        fromAccount: 'hdfc_bank',
+        toAccount: 'groww_wallet'
       });
-      // Flip back to manual entry tab so they can review the scanned details
       setTimeout(() => {
         setMethod('manual');
         setScanComplete(false);
@@ -89,8 +127,9 @@ function AddTransaction() {
 
           {/* VIEW 1: MANUAL FORM LAYER */}
           {method === 'manual' && (
-            <form onSubmit={(e) => { e.preventDefault(); alert('Transaction saved!'); navigate('/dashboard'); }} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5">
 
+              {/* FLOW PARAMETER SWITCHBOARD BUTTONS */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Flow Parameter</label>
                 <div className="grid grid-cols-3 gap-3">
@@ -118,6 +157,7 @@ function AddTransaction() {
                 </div>
               </div>
 
+              {/* AMOUNT BLOCK */}
               <div>
                 <label htmlFor="amount" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Absolute Magnitude (INR)</label>
                 <input
@@ -126,44 +166,84 @@ function AddTransaction() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="category" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                    Expense Category
-                  </label>
-                  <select
-                    id="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-slate-700 transition-all font-medium"
-                  >
-                    <option value="food_groceries">Food & Groceries</option>
-                    <option value="travel_cabs">Travel & Cabs</option>
-                    <option value="bills_recharges">Bills & Recharges</option>
-                    <option value="rent_pg">Rent & PG/Hostel</option>
-                    <option value="shopping">Shopping</option>
-                    <option value="movies_outings">Movies & Outings</option>
-                    <option value="education">Education & College</option>
-                    <option value="friend_transfers">Sent to Friends (UPI)</option>
-                    <option value="others">Others</option>
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="date" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Temporal Marker</label>
-                  <input type="date" id="date" value={formData.date} onChange={handleChange} required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-slate-700 transition-all font-medium" />
-                </div>
+              {/* DYNAMIC MIDDLE SECTION: ALTERNATING BASED ON SELECTION TYPE */}
+              <div className="space-y-5">
+
+                {/* DYNAMIC FIELD TYPE ROUTINE A: RENDER CATEGORIES FOR NON-TRANSFERS */}
+                {formData.type !== 'transfer' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="category" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        {formData.type === 'expense' ? 'Expense Category' : 'Income Source'}
+                      </label>
+                      <select
+                        id="category"
+                        value={formData.category}
+                        onChange={handleChange}
+                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-slate-700 transition-all font-medium"
+                      >
+                        {formData.type === 'expense' ? (
+                          <>
+                            <option value="food_groceries">Food & Groceries</option>
+                            <option value="travel_cabs">Travel & Cabs</option>
+                            <option value="bills_recharges">Bills & Recharges</option>
+                            <option value="rent_pg">Rent & PG/Hostel</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="movies_outings">Movies & Outings</option>
+                            <option value="education">Education & College</option>
+                            <option value="others">Others</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="salary">Primary Salary</option>
+                            <option value="freelance">Freelance Yield</option>
+                            <option value="investments">Market Dividends/Groww</option>
+                            <option value="peer_refund">Friend Remittance/Udhar</option>
+                            <option value="others">Others</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="date" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Temporal Marker</label>
+                      <input type="date" id="date" value={formData.date} onChange={handleChange} required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-slate-700 transition-all font-medium" />
+                    </div>
+                  </div>
+                )}
+
+                {/* DYNAMIC FIELD TYPE ROUTINE B: RENDER INTER-ACCOUNT TRANSFERS ROUTE SELECTORS */}
+                {formData.type === 'transfer' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="fromAccount" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">From</label>
+                        <input type="text" id="fromAccount" placeholder="e.g., HDFC Salary Bank" onChange={handleChange} required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-slate-900 transition-all" />
+                      </div>
+                      <div>
+                        <label htmlFor="toAccount" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">To</label>
+                        <input type="text" id="toAccount" placeholder="e.g., Groww Investment Wallet" onChange={handleChange} required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-slate-900 transition-all" />
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="date" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Date</label>
+                      <input type="date" id="date" value={formData.date} onChange={handleChange} required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-slate-700 transition-all font-medium" />
+                    </div>
+                  </div>
+                )}
+
               </div>
 
+              {/* DESCRIPTION TEXT BLOCK */}
               <div>
                 <label htmlFor="description" className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Descriptor Scope</label>
                 <input
-                  type="text" id="description" placeholder="e.g., Grocery store payload" value={formData.description} onChange={handleChange} required
+                  type="text" id="description" placeholder={formData.type === 'transfer' ? 'e.g., Transferring money to buy stocks' : 'e.g., Grocery store payload'} value={formData.description} onChange={handleChange} required
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-slate-900 transition-all"
                 />
               </div>
 
               <button type="submit" className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl text-sm hover:bg-indigo-700 shadow-sm transition-all mt-4">
-                Commit Entry to Database
+                Save Transaction
               </button>
             </form>
           )}
@@ -171,8 +251,6 @@ function AddTransaction() {
           {/* VIEW 2: DUMMY AI CAMERA INTERFACE */}
           {method === 'camera' && (
             <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-2xl min-h-[340px] text-center relative overflow-hidden">
-
-              {/* Overlay Scanning Animation state elements */}
               {isScanning && (
                 <div className="absolute inset-0 bg-white/80 backdrop-blur-xs flex flex-col items-center justify-center z-10 animate-fade-in">
                   <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mb-3" />
@@ -181,11 +259,9 @@ function AddTransaction() {
                     Executing OCR Parse Sequence...
                   </p>
                   <p className="text-xs text-slate-400 mt-1">Extracting amounts, dates, and vendor keys.</p>
-                  {/* Laser line representation */}
                   <div className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent top-0 animate-bounce mt-24"></div>
                 </div>
               )}
-
               {scanComplete && (
                 <div className="absolute inset-0 bg-white flex flex-col items-center justify-center z-10">
                   <CheckCircle2 className="w-12 h-12 text-emerald-500 animate-bounce mb-2" />
@@ -193,14 +269,11 @@ function AddTransaction() {
                   <p className="text-xs text-slate-400 mt-1">Hydrating manual entry data fields...</p>
                 </div>
               )}
-
-              {/* Viewfinder Content UI */}
               <div className="w-16 h-16 bg-white border border-slate-200 shadow-xs rounded-2xl flex items-center justify-center text-slate-400 mb-4">
                 <UploadCloud size={28} />
               </div>
               <h3 className="font-bold text-slate-900 text-base mb-1">Upload Receipt or Open Camera Viewfinder</h3>
               <p className="text-xs text-slate-400 max-w-xs mb-6">Drop structural image objects here or take a live picture to pass vectors to our dummy AI computer vision engine model parsing framework.</p>
-
               <button
                 type="button"
                 onClick={handleSimulateScan}

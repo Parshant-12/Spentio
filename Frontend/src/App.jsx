@@ -5,7 +5,7 @@ import Layout from '../Components/Layouts/Layout';
 import Dashboard from '../Components/Pages/Dashboard';
 import Analysis from '../Components/Pages/Analysis';
 import AddTransaction from '../Components/Pages/AddTransaction';
-import Transactions from '../Components/Pages/Transactions';
+import TransactionsHistory from '../Components/Pages/TransactionsHistory';
 import Budget from '../Components/Pages/Budget';
 import AiChat from '../Components/Pages/AiChat';
 import BillsAndEMIs from '../Components/Pages/Bills&EMIs';
@@ -34,7 +34,7 @@ function App() {
           <Route path='/Dashboard' element={<Dashboard />} />
           <Route path='/Analysis' element={<Analysis />} />
           <Route path='/AddTransaction' element={<AddTransaction />} />
-          <Route path='/Transactions' element={<Transactions />} />
+          <Route path='/TransactionsHistory' element={<TransactionsHistory />} />
           <Route path='/AiChat' element={<AiChat />} />
           <Route path='/Budget' element={<Budget />} />
           <Route path='/BillsAndEMIs' element={<BillsAndEMIs />} />
