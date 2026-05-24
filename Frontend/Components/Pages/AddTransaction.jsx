@@ -40,7 +40,7 @@ function AddTransaction() {
         delete formData.fromAccount;
         delete formData.toAccount;
       }
-      else if(formData.type === 'transfer') {
+      else if (formData.type === 'transfer') {
         delete formData.category;
       }
       const response = await fetch('http://localhost:3000/transactions', {
@@ -185,12 +185,14 @@ function AddTransaction() {
                         {formData.type === 'expense' ? (
                           <>
                             <option value="food_groceries">Food & Groceries</option>
+                            <option value="Bills & Recharges">Bills & EMIs</option>
+                            <option value="Education & Skilling">Education & Skilling</option>
                             <option value="travel_cabs">Travel & Cabs</option>
-                            <option value="bills_recharges">Bills & Recharges</option>
-                            <option value="rent_pg">Rent & PG/Hostel</option>
                             <option value="shopping">Shopping</option>
-                            <option value="movies_outings">Movies & Outings</option>
-                            <option value="education">Education & College</option>
+                            <option value="rent_pg">Rent & PG/Hostel</option>
+                            <option value="entertainment">Subscriptions & Entertainment</option>
+                            <option value="Investments & Savings">Investments & Savings</option>
+                            <option value="medical">Pharmacy & Medical</option>
                             <option value="others">Others</option>
                           </>
                         ) : (

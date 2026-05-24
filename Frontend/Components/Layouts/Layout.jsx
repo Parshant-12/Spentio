@@ -91,7 +91,7 @@ function Layout() {
                 <nav className="space-y-1">
                   <SidebarLink icon={<Receipt size={18} />} label="Analysis" active={location.pathname === '/analysis'} onClick={() => handleMobileNav('/analysis')} />
                   <SidebarLink icon={<Sparkles size={18} />} label="AI Copilot Chat" active={location.pathname === '/AiChat'} onClick={() => handleMobileNav('/AiChat')} />
-                  <SidebarLink icon={<CreditCard size={18} />} label="Bills & EMIs" active={location.pathname === '/BillsAndEMIs'} onClick={() => handleMobileNav('/BillsAndEMIs')} />
+                  <SidebarLink icon={<CreditCard size={18} />} label="Subscriptions & EMIs" active={location.pathname === '/BillsAndEMIs'} onClick={() => handleMobileNav('/BillsAndEMIs')} />
                   <SidebarLink icon={<PlusCircle size={18} />} label="Create Budget" active={location.pathname === '/Budget'} onClick={() => handleMobileNav('/Budget')} />
                   <SidebarLink icon={<Calculator size={18} />} label="Calculator" active={location.pathname === '/Calculator'} onClick={() => handleMobileNav('/Calculator')} />
                 </nav>
@@ -138,7 +138,7 @@ function Layout() {
               <nav className="space-y-1">
                 <SidebarLink icon={<Receipt size={18} />} label="Analysis" active={location.pathname === '/analysis'} onClick={() => navigate('/analysis')} />
                 <SidebarLink icon={<Sparkles size={18} />} label="AI Copilot Chat" active={location.pathname === '/AiChat'} onClick={() => navigate('/AiChat')} />
-                <SidebarLink icon={<CreditCard size={18} />} label="Bills & EMIs" active={location.pathname === '/BillsAndEMIs'} onClick={() => navigate('/BillsAndEMIs')} />
+                <SidebarLink icon={<CreditCard size={18} />} label="Subscriptions & EMIs" active={location.pathname === '/BillsAndEMIs'} onClick={() => navigate('/BillsAndEMIs')} />
                 <SidebarLink icon={<PlusCircle size={18} />} label="Create Budget" active={location.pathname === '/Budget'} onClick={() => navigate('/Budget')} />
                 <SidebarLink icon={<Calculator size={18} />} label="Calculator" active={location.pathname === '/Calculator'} onClick={() => navigate('/Calculator')} />
               </nav>
@@ -185,7 +185,7 @@ function Layout() {
 const SidebarLink = ({ icon, label, active, onClick }) => (
   <button 
     onClick={onClick}
-    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 border border-transparent
+    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 border border-transparent cursor-pointer
       ${active 
         ? 'bg-indigo-50/80 text-indigo-700 font-extrabold border-indigo-100/30' 
         : 'text-slate-500 hover:bg-slate-100/70 hover:text-slate-900'}`}

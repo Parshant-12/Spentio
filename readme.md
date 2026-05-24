@@ -22,4 +22,4 @@ Spent.io is a user-friendly expense management website built using the MERN stac
 
 ---
 
-### **Currently under development..**
+### **Currently under development...**

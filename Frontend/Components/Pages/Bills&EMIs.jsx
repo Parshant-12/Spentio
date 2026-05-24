@@ -1,96 +1,189 @@
-import React, { useState } from 'react';
-import { 
-  CreditCard, 
-  CalendarClock, 
-  Percent, 
-  AlertTriangle, 
-  CheckCircle2, 
-  ExternalLink,
-  ArrowUpRight,
-  ShieldAlert,
-  ArrowRight
+import React, { useState, useEffect } from 'react';
+import {
+  CreditCard,
+  CalendarClock,
+  Percent,
+  ArrowRight,
+  Plus,
+  X,
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 function BillsAndEMIs() {
   const navigate = useNavigate();
 
-  // Mock data structure for ongoing subscriptions and utilities
-  const [subscriptions] = useState([
-    { id: 1, name: 'Netflix Premium', amount: 649, dueDate: 'May 24', category: 'Entertainment', provider: 'Auto-debit' },
-    { id: 2, name: 'Airtel Fiber Wi-Fi', amount: 943, dueDate: 'May 28', category: 'Bills & Recharges', provider: 'Manual Pay' },
-    { id: 3, name: 'LeetCode Premium', amount: 2999, dueDate: 'Jun 02', category: 'Education', provider: 'Auto-debit' },
-    { id: 4, name: 'Gym Membership', amount: 2500, dueDate: 'Jun 05', category: 'Health & Pharmacy', provider: 'Manual Pay' },
-  ]);
+  // --- STATE MANAGEMENT ---
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [loans, setLoans] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mock data structure for amortized long-term debts
-  const [loans] = useState([
-    { id: 1, name: 'HDFC Student Loan', totalAmount: 400000, remaining: 180000, emi: 12500, interestRate: '8.5%', progress: 55 },
-    { id: 2, name: 'Apple Financial (Laptop EMI)', totalAmount: 120000, remaining: 40000, emi: 10000, interestRate: '0%', progress: 66.6 },
-  ]);
+  // Modal States
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  const [isLoanModalOpen, setIsLoanModalOpen] = useState(false);
 
-  const totalMonthlyCommitment = subscriptions.reduce((acc, c) => acc + c.amount, 0) + loans.reduce((acc, c) => acc + c.emi, 0);
+  // Form States (Matching your Mongoose Schemas)
+  const [subscriptionForm, setSubscriptionForm] = useState({ name: '', amount: '', subscriptioningCycle: 'monthly', dueDate: '', isAutoDebit: false });
+  const [loanForm, setLoanForm] = useState({ name: '', totalPrincipal: '', interestRate: '', emiAmount: '', dueDate: '', isAutoDebit: false });
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const responseLoans = await fetch(`http://localhost:3000/loans`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const dataLoans = await responseLoans.json();
+      setLoans(dataLoans);
+
+      const responseSubs = await fetch(`http://localhost:3000/subscriptions`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const dataSubs = await responseSubs.json();
+      setSubscriptions(dataSubs);
+
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      toast.error('Failed to fetch data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // --- HANDLERS ---
+  const handleAddSubscription = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`http://localhost:3000/subscription`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscriptionForm)
+      });
+      if (response.ok) {
+        fetchData();
+        toast.success('Subscription added successfully');
+        setIsSubscriptionModalOpen(false);
+      }
+      setSubscriptionForm({ name: '', amount: '', subscriptioningCycle: 'monthly', dueDate: '', isAutoDebit: false });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAddLoan = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`http://localhost:3000/loan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loanForm)
+      });
+      if (response.ok) {
+        fetchData();
+        toast.success('Loan added successfully');
+        setIsLoanModalOpen(false);
+      }
+      setIsLoanModalOpen(false);
+      setLoanForm({ name: '', totalPrincipal: '', interestRate: '', emiAmount: '', dueDate: '', isAutoDebit: false });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeletesubscription = async (id) => {
+    const response = await fetch(`http://localhost:3000/subscription/${id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (response.ok) {
+      toast.success('Subscription deleted');
+      setSubscriptions(subscriptions.filter(s => s._id !== id));
+    }
+  };
+  const handleDeleteLoan = async (id) => {
+    const response = await fetch(`http://localhost:3000/loan/${id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (response.ok) {
+      toast.success('Loan deleted');
+      setLoans(loans.filter(l => l._id !== id));
+    }
+  };
+
+  // --- CALCULATIONS ---
+  const totalMonthlyCommitment = subscriptions.reduce((acc, c) => acc + Number(c.amount || 0), 0) +
+    loans.reduce((acc, c) => acc + Number(c.emiAmount || 0), 0);
+
+  const totalOutstandingDebt = loans.reduce((acc, c) => acc + Number(c.remainingBalance || 0), 0);
+
+  if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
 
   return (
-    <div className="space-y-8">
-      
-      {/* HEADER & PORTAL LINK */}
+    <div className="space-y-8 relative">
+
+      {/* HEADER */}
       <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Recurring & BillsAndEMIs</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Audit subscriptions, upcoming billing cycles, and amortized debt metrics.</p>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Recurring & EMIs</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Audit subscriptions, upcoming subscriptioning cycles, and amortized debt metrics.</p>
         </div>
-        
-        {/* Cross-link button pushing users to the dedicated calculators route */}
-        <button 
-          onClick={() => navigate('/tools')}
-          className="flex items-center justify-center gap-2 border border-slate-200 bg-white px-4 py-2 rounded-xl text-slate-700 font-semibold text-xs shadow-sm hover:bg-slate-50 transition-all"
-        >
+        <button onClick={() => navigate('/Calculator')} className="flex cursor-pointer items-center justify-center gap-2 border border-slate-200 bg-white px-4 py-2 rounded-xl text-slate-700 font-semibold text-xs shadow-sm hover:bg-slate-50 transition-all">
           Open Planning Calculators <ArrowRight size={14} className="text-slate-400" />
         </button>
       </header>
 
-      {/* RECURRING COMMITMENTS METRIC HEADER BAR */}
+      {/* METRICS BAR */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-2xl border border-slate-200/70 shadow-sm flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Monthly Fixed Outflow</span>
             <p className="text-3xl font-black text-slate-900 tracking-tight">₹{totalMonthlyCommitment.toLocaleString('en-IN')}</p>
-            <span className="text-xs text-slate-400 block font-medium">Combined Bills + EMIs due</span>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-inner"><CreditCard size={20}/></div>
+          <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-inner"><CreditCard size={20} /></div>
         </div>
-
+        {/* Placeholder for Upcoming - You can calculate this dynamically later using Date() */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200/70 shadow-sm flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Upcoming (7 Days)</span>
-            <p className="text-3xl font-black text-amber-600 tracking-tight">₹1,592.00</p>
-            <span className="text-xs text-amber-600/80 block font-medium">2 Actions requiring clearance</span>
+            <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Active Subscriptions</span>
+            <p className="text-3xl font-black text-amber-600 tracking-tight">{subscriptions.length}</p>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-inner"><CalendarClock size={20}/></div>
+          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-inner"><CalendarClock size={20} /></div>
         </div>
-
         <div className="bg-white p-6 rounded-2xl border border-slate-200/70 shadow-sm flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Outstanding Debt Aggregate</span>
-            <p className="text-3xl font-black text-slate-900 tracking-tight">₹2,20,000</p>
-            <span className="text-xs text-rose-500 block font-medium">Principal remaining across pools</span>
+            <p className="text-3xl font-black text-slate-900 tracking-tight">₹{totalOutstandingDebt.toLocaleString('en-IN')}</p>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shadow-inner"><Percent size={20}/></div>
+          <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shadow-inner"><Percent size={20} /></div>
         </div>
       </div>
 
-      {/* INTERACTIVE WORKSPACE SECTION */}
+      {/* WORKSPACE SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* VIEW 1: SUBSCRIPTIONS & UTILITIES CONTAINER */}
+
+        {/* SUBSCRIPTIONS VIEW */}
         <div className="space-y-4">
-          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider pl-1">Subscriptions & Active Bills</h3>
-          
+          <div className="flex justify-between items-end pl-1">
+            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Active subscriptions</h3>
+            <button onClick={() => setIsSubscriptionModalOpen(true)} className="text-xs cursor-pointer font-bold text-indigo-600 flex items-center gap-1 hover:text-indigo-700">
+              <Plus size={14} /> Add Subscription
+            </button>
+          </div>
+
           <div className="bg-white rounded-2xl border border-slate-200/70 shadow-sm overflow-hidden">
             <div className="divide-y divide-slate-100">
-              {subscriptions.map((sub) => (
-                <div key={sub.id} className="p-4 sm:p-5 flex items-center justify-between hover:bg-slate-50/40 transition-colors">
+              {subscriptions.length === 0 ? (
+                <div className="p-6 text-center text-sm text-slate-400">No active subscriptions found.</div>
+              ) : subscriptions.map((sub) => (
+                <div key={sub._id} className="p-4 sm:p-5 flex items-center justify-between hover:bg-slate-100 transition-colors group">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center text-slate-600">
                       <CreditCard size={18} />
@@ -98,15 +191,20 @@ function BillsAndEMIs() {
                     <div>
                       <p className="text-sm font-bold text-slate-900">{sub.name}</p>
                       <p className="text-xs text-slate-400 font-semibold">
-                        Due: <span className="text-slate-700 font-bold">{sub.dueDate}</span> • {sub.provider}
+                        Due: Day {sub.dueDate} • {sub.isAutoDebit ? <span className="text-indigo-600">Auto-debit</span> : 'Manual Pay'}
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black text-slate-900">₹{sub.amount.toLocaleString('en-IN')}</p>
-                    <span className="inline-block text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold uppercase tracking-wider mt-1">
-                      {sub.category}
-                    </span>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-sm font-black text-slate-900">₹{Number(sub.amount).toLocaleString('en-IN')}</p>
+                      <span className="inline-block text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold uppercase tracking-wider mt-1">
+                        {sub.billingCycle}
+                      </span>
+                    </div>
+                    <button onClick={() => handleDeletesubscription(sub._id)} className="p-1.5 bg-rose-50 rounded-lg hover:bg-rose-100 text-rose-400 hover:text-rose-600 transition-opacity cursor-pointer">
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -114,46 +212,131 @@ function BillsAndEMIs() {
           </div>
         </div>
 
-        {/* VIEW 2: AMORTIZED LOANS & LOAN TRAJECTORY CEILINGS */}
+        {/* LOANS VIEW */}
         <div className="space-y-4">
-          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider pl-1">Active Loans & EMI Payoffs</h3>
-          
-          <div className="space-y-4">
-            {loans.map((loan) => (
-              <div key={loan.id} className="bg-white border border-slate-200/70 rounded-2xl p-5 shadow-sm space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-sm">{loan.name}</h4>
-                    <p className="text-xs text-slate-400 mt-0.5 font-semibold">
-                      Interest Rate: <span className="text-slate-800 font-black">{loan.interestRate}</span>
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs text-slate-400 block font-medium">Monthly EMI</span>
-                    <p className="text-base font-black text-indigo-600">₹{loan.emi.toLocaleString('en-IN')}/mo</p>
-                  </div>
-                </div>
+          <div className="flex justify-between items-end pl-1">
+            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Active Loans</h3>
+            <button onClick={() => setIsLoanModalOpen(true)} className="text-xs cursor-pointer font-bold text-indigo-600 flex items-center gap-1 hover:text-indigo-700">
+              <Plus size={14} /> Add Loan
+            </button>
+          </div>
 
-                {/* Progress bar tracking payload payoff sequence */}
-                <div className="space-y-1.5">
-                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-indigo-600 h-full rounded-full transition-all duration-300"
-                      style={{ width: `${loan.progress}%` }}
-                    ></div>
+          <div className="space-y-4">
+            {loans.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-slate-200/70 p-6 text-center text-sm text-slate-400">No active loans found.</div>
+            ) : loans.map((loan) => {
+              const progress = ((loan.totalPrincipal - loan.remainingBalance) / loan.totalPrincipal) * 100;
+              return (
+                <div key={loan._id} className="bg-white border border-slate-200/70 rounded-2xl p-5 shadow-sm space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm">{loan.name}</h4>
+                      <p className="text-xs text-slate-400 mt-0.5 font-semibold">
+                        Interest Rate: <span className="text-slate-800 font-black">{loan.interestRate}%</span> • Due: Day {loan.dueDate}
+                      </p>
+                      <p className="text-xs text-slate-400 font-semibold">
+                        {loan.isAutoDebit ? <span className="text-indigo-600">Auto-debit</span> : 'Manual Pay'}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-slate-400 block font-medium">Monthly EMI</span>
+                      <p className="text-base font-black text-indigo-600">₹{Number(loan.emiAmount).toLocaleString('en-IN')}/mo</p>
+                      <button onClick={() => handleDeleteLoan(loan._id)} className="p-1 bg-rose-50 rounded-sm hover:bg-rose-100 text-rose-400 hover:text-rose-600 transition-opacity cursor-pointer">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                    <span>Paid: ₹{(loan.totalAmount - loan.remaining).toLocaleString('en-IN')}</span>
-                    <span className="text-slate-700 font-black">{loan.progress.toFixed(0)}% Settled</span>
-                    <span>Remaining: ₹{loan.remaining.toLocaleString('en-IN')}</span>
+
+                  <div className="space-y-1.5">
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div className="bg-indigo-600 h-full rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                    </div>
+                    <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                      <span>Paid: ₹{(loan.totalPrincipal - loan.remainingBalance).toLocaleString('en-IN')}</span>
+                      <span className="text-slate-700 font-black">{progress.toFixed(0)}% Settled</span>
+                      <span>Remaining: ₹{loan.remainingBalance.toLocaleString('en-IN')}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
-
       </div>
+
+      {/* --- ADD SUBSCRIPTION MODAL --- */}
+      {isSubscriptionModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl border border-slate-100 p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-slate-900">Add New Subscription</h3>
+              <button onClick={() => setIsSubscriptionModalOpen(false)} className="text-slate-400 cursor-pointer hover:text-slate-600"><X size={20} /></button>
+            </div>
+            <form onSubmit={handleAddSubscription} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Name</label>
+                <input required type="text" value={subscriptionForm.name} onChange={(e) => setSubscriptionForm({ ...subscriptionForm, name: e.target.value })} className="w-full border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-600 outline-none" placeholder="e.g. Netflix" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Amount (₹)</label>
+                  <input required type="number" value={subscriptionForm.amount} onChange={(e) => setSubscriptionForm({ ...subscriptionForm, amount: e.target.value })} className="w-full border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-600 outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Due Date (1-31)</label>
+                  <input required type="number" min="1" max="31" value={subscriptionForm.dueDate} onChange={(e) => setSubscriptionForm({ ...subscriptionForm, dueDate: e.target.value })} className="w-full border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-600 outline-none" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <input type="checkbox" id="autoDebit" checked={subscriptionForm.isAutoDebit} onChange={(e) => setSubscriptionForm({ ...subscriptionForm, isAutoDebit: e.target.checked })} className="rounded text-indigo-600 focus:ring-indigo-600" />
+                <label htmlFor="autoDebit" className="text-sm font-semibold text-slate-700">Enable Auto-debit</label>
+              </div>
+              <button type="submit" className="w-full bg-indigo-700 text-white font-bold py-3 rounded-xl mt-4 hover:bg-slate-800 transition-colors">Save subscription</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- ADD LOAN MODAL --- */}
+      {isLoanModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl border border-slate-100 p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-slate-900">Add New Loan</h3>
+              <button onClick={() => setIsLoanModalOpen(false)} className="text-slate-400 cursor-pointer hover:text-slate-600"><X size={20} /></button>
+            </div>
+            <form onSubmit={handleAddLoan} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Loan Name</label>
+                <input required type="text" value={loanForm.name} onChange={(e) => setLoanForm({ ...loanForm, name: e.target.value })} className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600" placeholder="e.g. Education Loan" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Principal (₹)</label>
+                  <input required type="number" value={loanForm.totalPrincipal} onChange={(e) => setLoanForm({ ...loanForm, totalPrincipal: e.target.value })} className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">EMI Amount (₹)</label>
+                  <input required type="number" value={loanForm.emiAmount} onChange={(e) => setLoanForm({ ...loanForm, emiAmount: e.target.value })} className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Interest Rate (%)</label>
+                  <input required type="number" step="0.1" value={loanForm.interestRate} onChange={(e) => setLoanForm({ ...loanForm, interestRate: e.target.value })} className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Due Date (1-31)</label>
+                  <input required type="number" min="1" max="31" value={loanForm.dueDate} onChange={(e) => setLoanForm({ ...loanForm, dueDate: e.target.value })} className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600" />
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <input type="checkbox" id="autoDebit" checked={loanForm.isAutoDebit} onChange={(e) => setLoanForm({ ...loanForm, isAutoDebit: e.target.checked })} className="rounded text-indigo-600 focus:ring-indigo-600" />
+                  <label htmlFor="autoDebit" className="text-sm font-semibold text-slate-700">Enable Auto-debit</label>
+                </div>
+              </div>
+              <button type="submit" className="w-full bg-indigo-700 text-white font-bold py-3 rounded-xl mt-4 hover:bg-slate-800 transition-colors">Save Loan</button>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

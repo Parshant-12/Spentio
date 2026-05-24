@@ -62,7 +62,7 @@ function Tools() {
 
   return (
     <div className="space-y-8 max-w-5xl">
-      
+
       {/* HEADER & SWITCH RIBBON */}
       <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
@@ -72,15 +72,15 @@ function Tools() {
 
         {/* COMPONENT TAB NAVIGATION BAR */}
         <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200/40 shadow-inner self-start sm:self-auto">
-          <button 
+          <button
             onClick={() => setActiveTab('emi')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'emi' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+            className={`px-4 py-2 cursor-pointer rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'emi' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
           >
             <Calculator size={14} /> Loan EMI Engine
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('interest')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'interest' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+            className={`px-4 py-2 cursor-pointer rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'interest' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
           >
             <Percent size={14} /> Yield & Interest
           </button>
@@ -90,7 +90,7 @@ function Tools() {
       {/* RENDER VIEW A: EQUATED MONTHLY INSTALLMENT ENGINE */}
       {activeTab === 'emi' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* INPUT FORM BLOCK CONTAINER */}
           <div className="bg-white border border-slate-200/70 rounded-2xl p-6 shadow-sm space-y-5 h-fit">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-50 pb-3">
@@ -99,22 +99,22 @@ function Tools() {
             <div className="space-y-4">
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Loan Principal Amount (INR)</label>
-                <input 
-                  type="number" value={emiInputs.principal} onChange={(e) => setEmiInputs({...emiInputs, principal: e.target.value})}
+                <input
+                  type="number" value={emiInputs.principal} onChange={(e) => setEmiInputs({ ...emiInputs, principal: e.target.value })}
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
                 />
               </div>
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Interest Rate (% P.A.)</label>
-                <input 
-                  type="number" step="0.1" value={emiInputs.rate} onChange={(e) => setEmiInputs({...emiInputs, rate: e.target.value})}
+                <input
+                  type="number" step="0.1" value={emiInputs.rate} onChange={(e) => setEmiInputs({ ...emiInputs, rate: e.target.value })}
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Tenure Horizon Duration (Years)</label>
-                <input 
-                  type="number" value={emiInputs.tenure} onChange={(e) => setEmiInputs({...emiInputs, tenure: e.target.value})}
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Time (Years)</label>
+                <input
+                  type="number" value={emiInputs.tenure} onChange={(e) => setEmiInputs({ ...emiInputs, tenure: e.target.value })}
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
                 />
               </div>
@@ -147,10 +147,10 @@ function Tools() {
                 Loan calculations utilize the standard mathematical monthly reducing amortization framework model:
               </p>
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center font-mono text-sm text-indigo-600 font-bold overflow-x-auto">
-                {/* $$E = \frac{P \cdot r \cdot (1+r)^n}{(1+r)^n - 1}$$ */}
+                E = [P × r × (1 + r)<sup>n</sup>] / [(1 + r)<sup>n</sup> - 1]
               </div>
               <p className="text-[11px] text-slate-400 leading-normal">
-                Where $P$ represents absolute principal volume, $r$ defines monthly compounded fractional conversion parameters, and $n$ targets total monthly billing iteration limits.
+                Where P represents absolute principal volume, r defines monthly compounded fractional conversion parameters, and n targets total monthly billing iteration limits.
               </p>
             </div>
           </div>
@@ -161,7 +161,7 @@ function Tools() {
       {/* RENDER VIEW B: SIMPLE & COMPOUND INTEREST HORIZONS PROJECTOR */}
       {activeTab === 'interest' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* CONTROL BOX PACKET ELEMENT */}
           <div className="bg-white border border-slate-200/70 rounded-2xl p-6 shadow-sm space-y-5 h-fit">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-50 pb-3">
@@ -171,15 +171,15 @@ function Tools() {
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Compounding Routine Mode</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button 
-                    type="button" onClick={() => setInterestInputs({...interestInputs, type: 'simple'})}
-                    className={`py-2 rounded-xl text-xs font-bold border transition-all ${interestInputs.type === 'simple' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-500'}`}
+                  <button
+                    type="button" onClick={() => setInterestInputs({ ...interestInputs, type: 'simple' })}
+                    className={`py-2 cursor-pointer rounded-xl text-xs font-bold border transition-all ${interestInputs.type === 'simple' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-500'}`}
                   >
                     Simple
                   </button>
-                  <button 
-                    type="button" onClick={() => setInterestInputs({...interestInputs, type: 'compound'})}
-                    className={`py-2 rounded-xl text-xs font-bold border transition-all ${interestInputs.type === 'compound' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-500'}`}
+                  <button
+                    type="button" onClick={() => setInterestInputs({ ...interestInputs, type: 'compound' })}
+                    className={`py-2 cursor-pointer rounded-xl text-xs font-bold border transition-all ${interestInputs.type === 'compound' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-500'}`}
                   >
                     Compound
                   </button>
@@ -187,22 +187,22 @@ function Tools() {
               </div>
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Initial Deposit Principal (INR)</label>
-                <input 
-                  type="number" value={interestInputs.principal} onChange={(e) => setInterestInputs({...interestInputs, principal: e.target.value})}
+                <input
+                  type="number" value={interestInputs.principal} onChange={(e) => setInterestInputs({ ...interestInputs, principal: e.target.value })}
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
                 />
               </div>
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Expected Yield Rate (% P.A.)</label>
-                <input 
-                  type="number" step="0.01" value={interestInputs.rate} onChange={(e) => setInterestInputs({...interestInputs, rate: e.target.value})}
+                <input
+                  type="number" step="0.01" value={interestInputs.rate} onChange={(e) => setInterestInputs({ ...interestInputs, rate: e.target.value })}
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Time Horizon Interval (Years)</label>
-                <input 
-                  type="number" value={interestInputs.time} onChange={(e) => setInterestInputs({...interestInputs, time: e.target.value})}
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Time (Years)</label>
+                <input
+                  type="number" value={interestInputs.time} onChange={(e) => setInterestInputs({ ...interestInputs, time: e.target.value })}
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
                 />
               </div>

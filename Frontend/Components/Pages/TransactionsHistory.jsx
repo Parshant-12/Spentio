@@ -77,7 +77,7 @@ function Transactions() {
   };
   const handleEdit = (id) => {
     
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -137,7 +137,7 @@ function Transactions() {
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
               {data.map((tx) => (
-                <tr key={tx.id} className="hover:bg-slate-50/40 transition-colors group">
+                <tr key={tx.id} className="hover:bg-slate-100 transition-colors group">
                   {/* Title & Vector Indicators */}
                   <td className="py-4 px-6 flex items-center gap-3.5">
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-inner shrink-0
@@ -189,14 +189,14 @@ function Transactions() {
                     <div className="flex items-center justify-center gap-1">
                       <button
                         onClick={() => handleEdit(tx._id)}
-                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-150"
+                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-100 rounded-lg hover:cursor-pointer transition-all duration-150"
                         title="Edit Entry"
                       >
                         <Pencil size={15} />
                       </button>
                       <button
                         onClick={() => handleDelete(tx._id)}
-                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-150"
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-100 rounded-lg hover:cursor-pointer transition-all duration-150"
                         title="Purge Entry"
                       >
                         <Trash2 size={15} />
