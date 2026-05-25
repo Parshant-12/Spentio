@@ -73,20 +73,29 @@ npm install
 npm run dev
 ```
 ## 4. Project Structure
+```text
 spent-io/
-├── client/                 # React Frontend
+├── Frontend(client)/       # React Frontend
+│   ├── components/         # Reusable UI components (Settings, Login, etc.)
+│   │   ├── Authentication  # Auths (login, signups)
+│   │   ├── Layout          # Handle layout of website
+│   │   ├── Pages           # UI components (Dashboard, Analysis, Settings)
+│   │   
 │   ├── src/
-│   │   ├── components/     # Reusable UI components (Settings, Login, etc.)
 │   │   ├── Layouts/        # Wrappers (Modals, Loaders)
 │   │   ├── App.jsx         # Main routing
+│   │   ├── index.css       # Styling
 │   │   └── main.jsx        # Entry point
 │   └── tailwind.config.js  # Tailwind theme configuration
 │
-└── server/                 # Express Backend
+└── Backend(server)/        # Express Backend
     ├── Models/             # Mongoose schemas (User, Transaction, Loan)
     ├── routes/             # API endpoints (Auth, Settings, Transactions)
     ├── middleware/         # Custom middleware (fetchUser auth validation)
-    └── index.js            # Server entry point
+    ├── Jobs/               # Cron jobs (For auto emi payments)
+    ├── Utils/              # For email handleing (password reset-mail)
+    └── server.js           # Server entry point
+```
 
 ## 💡 Engineering Highlights
 * Optimized Payload Management: Implemented conditional backend updates (e.g., optional password changes) to reduce unnecessary database writes and enhance security.
