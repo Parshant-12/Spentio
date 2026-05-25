@@ -1,32 +1,131 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   PlusCircle, 
   ArrowUpRight, 
   ArrowDownLeft, 
   Wallet, 
-  TrendingUp, 
+  TrendingUp,
+  TrendingDown, 
   ShoppingBag, 
   Utensils, 
   Car, 
-  Layers 
+  Layers,
+  Loader2,
+  Receipt
 } from 'lucide-react';
+import { toast } from 'react-toastify';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function Dashboard() {
   const navigate = useNavigate();
+  const [transactions, setTransactions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Default monthly budget limit (You can fetch this from your DB later)
+  const monthlyBudget = 50000;
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/transactions`, {
+          method: 'GET',
+          headers: {
+            'content-type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          cache: 'no-store'
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch");
+        
+        const data = await response.json();
+        setTransactions(data);
+      } catch (error) {
+        console.error("Dashboard Fetch Error:", error);
+        toast.error("Could not load dashboard data.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // --- CALCULATIONS ---
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  // 1. Filter transactions by this month
+  const thisMonthTxns = transactions.filter(tx => {
+    const txDate = new Date(tx.date);
+    return txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear;
+  });
+
+  // 2. Calculate Totals
+  const totalIncome = thisMonthTxns
+    .filter(tx => tx.type === 'income')
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
+  const totalExpense = thisMonthTxns
+    .filter(tx => tx.type === 'expense')
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
+  // Lifetime balance (All time income - All time expense)
+  const totalBalance = transactions
+    .filter(tx => tx.type === 'income')
+    .reduce((sum, tx) => sum + tx.amount, 0) - 
+    transactions
+    .filter(tx => tx.type === 'expense')
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
+  // 3. Daily Velocity (Today vs Yesterday)
+  const todayString = now.toISOString().split('T')[0];
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayString = yesterday.toISOString().split('T')[0];
+
+  const todaySpent = transactions
+    .filter(tx => tx.type === 'expense' && tx.date.startsWith(todayString))
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
+  const yesterdaySpent = transactions
+    .filter(tx => tx.type === 'expense' && tx.date.startsWith(yesterdayString))
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
+  const dailyDifference = todaySpent - yesterdaySpent;
+  const isSpendingUp = dailyDifference > 0;
+
+  // 4. Budget Calculation
+  const budgetPercentage = Math.min((totalExpense / monthlyBudget) * 100, 100).toFixed(1);
+  const remainingBudget = monthlyBudget - totalExpense;
+
+  // 5. Get 4 most recent transactions
+  const recentTransactions = [...transactions]
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 4);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <Loader2 className="w-10 h-10 text-indigo-600 dark:text-indigo-400 animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 transition-colors duration-200">
       
       {/* HEADER SECTION */}
       <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Overview</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Metrics, behaviors, and ledger positions.</p>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Overview</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Your money at a glance.</p>
         </div>
         <button 
           onClick={() => navigate('/AddTransaction')}
-          className="flex items-center justify-center gap-2 bg-indigo-600 px-4 py-2.5 rounded-xl text-white font-medium text-sm shadow-sm hover:bg-indigo-700 hover:shadow transition-all duration-200"
+          className="flex items-center justify-center gap-2 bg-indigo-600 dark:bg-indigo-500 px-4 py-2.5 rounded-xl text-white font-medium text-sm shadow-sm hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all duration-200 cursor-pointer"
         >
           <PlusCircle size={16} /> New Transaction
         </button>
@@ -34,92 +133,117 @@ function Dashboard() {
 
       {/* CORE METRICS GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <StatCard title="Total Available Balance" value="Reference Point" amount="₹45,231.00" icon={<Wallet size={20}/>} trendColor="text-indigo-600" bgCircle="bg-indigo-50 text-indigo-600" />
-        <StatCard title="Inbound Liquidity" value="This Month" amount="₹85,000.00" icon={<ArrowUpRight size={20}/>} trendColor="text-emerald-600" bgCircle="bg-emerald-50 text-emerald-600" />
-        <StatCard title="Outbound Operational Capital" value="This Month" amount="₹39,769.00" icon={<ArrowDownLeft size={20}/>} trendColor="text-rose-600" bgCircle="bg-rose-50 text-rose-600" />
+        <StatCard title="Total Available Balance" value="All-time" amount={`₹${totalBalance.toLocaleString('en-IN')}`} icon={<Wallet size={20}/>} trendColor="text-indigo-600 dark:text-indigo-400" bgCircle="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" />
+        <StatCard title="Total Income" value="This Month" amount={`₹${totalIncome.toLocaleString('en-IN')}`} icon={<ArrowUpRight size={20}/>} trendColor="text-emerald-600 dark:text-emerald-400" bgCircle="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" />
+        <StatCard title="Total Expenses" value="This Month" amount={`₹${totalExpense.toLocaleString('en-IN')}`} icon={<ArrowDownLeft size={20}/>} trendColor="text-rose-600 dark:text-rose-400" bgCircle="bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400" />
       </div>
 
-      {/* SECONDARY ROW GRID: ADVANCED WIDGETS */}
+      {/* SECONDARY ROW GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* DAILY VELOCITY COMPARE ENGINE */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/70 shadow-sm flex flex-col justify-between">
+        {/* DAILY SPENDING COMPARE */}
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-sm flex flex-col justify-between transition-colors duration-200">
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-slate-900 text-base">Daily Velocity</h3>
-              <span className="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-medium">Real-time</span>
+              <h3 className="font-bold text-slate-900 dark:text-white text-base">Daily Spending</h3>
+              <span className="text-xs bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 px-2.5 py-1 rounded-full font-medium">Real-time</span>
             </div>
             <div className="space-y-3.5">
-              <div className="flex justify-between items-center p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-sm font-medium text-slate-500">Today's Aggregated Debit</span>
-                <span className="text-base font-bold text-slate-900">₹1,240.00</span>
+              <div className="flex justify-between items-center p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50">
+                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Spent Today</span>
+                <span className="text-base font-bold text-slate-900 dark:text-white">₹{todaySpent.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between items-center p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-sm font-medium text-slate-500">Yesterday's Total Debit</span>
-                <span className="text-base font-bold text-slate-700">₹2,850.00</span>
+              <div className="flex justify-between items-center p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50">
+                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Spent Yesterday</span>
+                <span className="text-base font-bold text-slate-700 dark:text-slate-300">₹{yesterdaySpent.toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 text-xs font-medium text-emerald-600">
-            <TrendingUp size={14} />
-            <span>Velocity dropped 56.4% compared to yesterday. Outstanding baseline efficiency.</span>
+          <div className={`mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 text-xs font-medium ${isSpendingUp ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+            {isSpendingUp ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+            <span>
+              {isSpendingUp 
+                ? `You have spent ₹${Math.abs(dailyDifference).toLocaleString('en-IN')} more than yesterday.` 
+                : `You have spent ₹${Math.abs(dailyDifference).toLocaleString('en-IN')} less than yesterday.`}
+            </span>
           </div>
         </div>
 
-        {/* BUDGET LIMIT EXHAUSTION COMPONENT */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/70 shadow-sm flex flex-col justify-between">
+        {/* BUDGET PROGRESS */}
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-sm flex flex-col justify-between transition-colors duration-200">
           <div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">Monthly Safe-To-Spend Target</h3>
-            <p className="text-xs text-slate-500 mb-4">Fixed threshold optimization bar.</p>
+            <h3 className="font-bold text-slate-900 dark:text-white text-base mb-1">Monthly Budget</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">How close you are to your limit.</p>
             <div className="space-y-2">
               <div className="flex justify-between items-baseline">
-                <span className="text-2xl font-black text-slate-900">79.5%</span>
-                <span className="text-xs text-slate-400">₹39,769 / ₹50,000 ceiling</span>
+                <span className="text-2xl font-black text-slate-900 dark:text-white">{budgetPercentage}%</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500">₹{totalExpense.toLocaleString('en-IN')} / ₹{monthlyBudget.toLocaleString('en-IN')} limit</span>
               </div>
-              <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                <div className="bg-gradient-to-r from-amber-500 to-rose-500 h-full rounded-full" style={{ width: '79.5%' }}></div>
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                <div className={`h-full rounded-full ${budgetPercentage > 90 ? 'bg-rose-500' : budgetPercentage > 70 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${budgetPercentage}%` }}></div>
               </div>
             </div>
           </div>
-          <p className="text-xs text-slate-400 mt-4">Approaching danger threshold zone limit. Buffer: ₹10,231.</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-4">
+            {remainingBudget > 0 
+              ? `Safe to spend: ₹${remainingBudget.toLocaleString('en-IN')} remaining.` 
+              : `Budget exceeded by ₹${Math.abs(remainingBudget).toLocaleString('en-IN')}.`}
+          </p>
         </div>
 
-        {/* DATA VISUALIZATION ENGINE HOOK CONTAINER */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/70 shadow-sm flex flex-col justify-between">
+        {/* QUICK ACTIONS / CATEGORY SHORTCUT */}
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-sm flex flex-col justify-between transition-colors duration-200">
           <div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">High-Level Distributive Vector</h3>
-            <p className="text-xs text-slate-500 mb-4">Functional balance visual engine map.</p>
-            <div className="h-28 bg-slate-50 rounded-xl border border-dashed border-slate-200 flex items-center justify-center text-xs text-slate-400 font-medium">
-              [Analytical Frame Injection Point - Recharts Element]
+            <h3 className="font-bold text-slate-900 dark:text-white text-base mb-1">Category Breakdown</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">View your full analysis.</p>
+            <div className="h-28 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-xs text-slate-400 dark:text-slate-500 font-medium p-4 text-center">
+              Want to see exactly where your money goes? Check the Analysis tab for pie charts and timelines.
+              <button 
+                onClick={() => navigate('/Analysis')}
+                className="mt-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-4 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+              >
+                Open Analysis
+              </button>
             </div>
           </div>
-          <div className="flex justify-between text-xs text-slate-500 mt-3 pt-3 border-t border-slate-100">
+          <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-indigo-500"></span>Food</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500"></span>Travel</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500"></span>Utilities</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500"></span>Bills</span>
           </div>
         </div>
       </div>
 
-      {/* RECENT TRANSACTION LEDGER WIDGET */}
-      <div className="bg-white rounded-2xl border border-slate-200/70 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+      {/* RECENT TRANSACTIONS */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-sm overflow-hidden transition-colors duration-200">
+        <div className="p-6 border-b border-slate-100 dark:border-slate-800/80 flex justify-between items-center">
           <div>
-            <h3 className="font-bold text-slate-900 text-base">Execution Stream</h3>
-            <p className="text-xs text-slate-400">Most recent structural adjustments.</p>
+            <h3 className="font-bold text-slate-900 dark:text-white text-base">Recent Transactions</h3>
+            <p className="text-xs text-slate-400 dark:text-slate-500">Your latest activity.</p>
           </div>
           <button 
-            onClick={() => navigate('/Analysis')} 
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline"
+            onClick={() => navigate('/TransactionsHistory')} 
+            className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline cursor-pointer transition-colors"
           >
-            View System Ledger
+            View All
           </button>
         </div>
-        <div className="divide-y divide-slate-100">
-          <TransactionRowItem icon={<ShoppingBag size={16}/>} label="Amazon Infrastructure Payment" subtitle="Cloud Services Procurement" date="Today, 02:14 PM" amount="- ₹1,240.00" type="expense" />
-          <TransactionRowItem icon={<Layers size={16}/>} label="Stripe Remittance Clearing" subtitle="Inbound Client SOW Dividend" date="Yesterday, 11:30 AM" amount="+ ₹45,000.00" type="income" />
-          <TransactionRowItem icon={<Utensils size={16}/>} label="Zomato Provisions Logistics" subtitle="Subsistence Expense Vector" date="14 May 2026" amount="- ₹420.00" type="expense" />
-          <TransactionRowItem icon={<Car size={16}/>} label="Uber Transport Logistics" subtitle="Commute Optimization Matrix" date="12 May 2026" amount="- ₹680.00" type="expense" />
+        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          {recentTransactions.length > 0 ? (
+            recentTransactions.map(tx => (
+              <TransactionRowItem 
+                key={tx._id}
+                icon={<Receipt size={16}/>} 
+                label={tx.description || tx.category} 
+                subtitle={tx.category} 
+                date={new Date(tx.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} 
+                amount={`${tx.type === 'income' ? '+' : '-'} ₹${tx.amount.toLocaleString('en-IN')}`} 
+                type={tx.type} 
+              />
+            ))
+          ) : (
+            <div className="p-6 text-center text-sm text-slate-500 dark:text-slate-400">No recent transactions found.</div>
+          )}
         </div>
       </div>
     </div>
@@ -128,10 +252,10 @@ function Dashboard() {
 
 /* SUB-COMPONENTS */
 const StatCard = ({ title, value, amount, icon, trendColor, bgCircle }) => (
-  <div className="bg-white p-6 rounded-2xl border border-slate-200/70 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex items-center justify-between">
+  <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex items-center justify-between transition-colors duration-200">
     <div className="space-y-1">
-      <span className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">{title}</span>
-      <p className="text-2xl font-black text-slate-900 tracking-tight">{amount}</p>
+      <span className="text-[11px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">{title}</span>
+      <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{amount}</p>
       <span className={`text-xs block font-medium ${trendColor}`}>{value}</span>
     </div>
     <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-inner ${bgCircle}`}>
@@ -141,17 +265,17 @@ const StatCard = ({ title, value, amount, icon, trendColor, bgCircle }) => (
 );
 
 const TransactionRowItem = ({ icon, label, subtitle, date, amount, type }) => (
-  <div className="p-4 sm:px-6 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
+  <div className="p-4 sm:px-6 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
     <div className="flex items-center gap-4">
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${type === 'income' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-600'}`}>
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${type === 'income' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
         {icon}
       </div>
       <div>
-        <p className="text-sm font-semibold text-slate-900">{label}</p>
-        <p className="text-xs text-slate-400 font-medium">{subtitle} • {date}</p>
+        <p className="text-sm font-semibold text-slate-900 dark:text-white">{label}</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">{subtitle} • {date}</p>
       </div>
     </div>
-    <span className={`text-sm font-bold tracking-tight ${type === 'income' ? 'text-emerald-600' : 'text-slate-900'}`}>
+    <span className={`text-sm font-bold tracking-tight ${type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>
       {amount}
     </span>
   </div>

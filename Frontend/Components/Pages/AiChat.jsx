@@ -1,128 +1,129 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, MessageSquare, Loader2, HelpCircle } from 'lucide-react';
+import { toast } from 'react-toastify';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function ChatCopilot() {
   const [messages, setMessages] = useState([
     {
       id: 1,
       sender: 'ai',
-      text: "Hi Parshant! I'm your Spent.io Copilot. I have indexed your current month's transactions, budget thresholds, and spending velocity. Ask me anything about your data!",
-      time: '04:30 PM'
+      text: "Hi! I'm your Financial Copilot. I'm now connected to your live database. Ask me to summarize your spending, find specific expenses, or analyze your habits!",
+      time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
     }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
 
-  // Auto-scroll layout to the latest message bubble node
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  // Suggested quick prompts array for easy UX testing
   const quickPrompts = [
     { label: "Summarize my spending", query: "Can you give me a summary of my spending this month?" },
-    { label: "Check budget status", query: "Am I close to breaching any of my budgets?" },
-    { label: "Analyze weekend velocity", query: "Why did my spending spike last weekend?" }
+    { label: "Where did I spend the most?", query: "Which category did I spend the most money on recently?" },
+    { label: "Find specific transactions", query: "Show me all my food transactions." }
   ];
 
-  // Smart Mock Response Rules matching your project's data profile context
-  const getAIResponse = (userText) => {
-    const text = userText.toLowerCase();
-    if (text.includes('summary') || text.includes('spend') || text.includes('total')) {
-      return "You have spent a total of ₹39,769.00 this month out of your total available balance of ₹45,231.00. Your highest cost center remains Rent & PG/Hostel (₹15,000.00), followed closely by Food & Groceries (₹12,450.00).";
-    }
-    if (text.includes('budget') || text.includes('breach') || text.includes('limit')) {
-      return "Your 'Rent & PG/Hostel' budget is 100% exhausted at ₹15,000. Additionally, your 'Shopping' allocation is at 85.2% (₹6,820/₹8,000) and 'Food' is at 83%. You are entering a critical zone with a remaining buffer of only ₹10,231.00.";
-    }
-    if (text.includes('weekend') || text.includes('spike') || text.includes('velocity') || text.includes('swiggy')) {
-      return "I detected a 24% frequency acceleration in your food logistics vector over the weekend. You had multiple recurring transactions via Zomato and Swiggy totaling ₹1,240.00, which caused Week 2 to hold your peak velocity.";
-    }
-    return "I am analyzing your structural data model endpoints. Currently, your account displays stable inbound liquidity (₹85,000.00) and an overall resource exhaustion rate of 79.5%. Is there a specific category transaction layer you want me to audit?";
-  };
-
-  const handleSendMessage = (textToSend) => {
+  const handleSendMessage = async (textToSend) => {
     if (!textToSend.trim()) return;
 
     const currentTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
     
-    // 1. Append User Message
-    const userMsg = {
-      id: Date.now(),
-      sender: 'user',
-      text: textToSend,
-      time: currentTime
-    };
+    // 1. Add User Message to UI instantly
+    const userMsg = { id: Date.now(), sender: 'user', text: textToSend, time: currentTime };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
-    
-    // 2. Trigger AI Processing Animation State
     setIsTyping(true);
 
-    // 3. Simulate processing delay
-    setTimeout(() => {
+    try {
+      // 2. Call your new Express API
+      const response = await fetch(`${BASE_URL}/copilot`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ message: textToSend })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // 3. Add AI Response to UI
+        const aiMsg = {
+          id: Date.now() + 1,
+          sender: 'ai',
+          text: data.reply,
+          time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+        };
+        setMessages(prev => [...prev, aiMsg]);
+      } else {
+        toast.error("Copilot encountered an error.");
+      }
+    } catch (error) {
+      console.error("Network Error:", error);
+      toast.error("Failed to connect to AI server.");
+    } finally {
       setIsTyping(false);
-      const aiMsg = {
-        id: Date.now() + 1,
-        sender: 'ai',
-        text: getAIResponse(textToSend),
-        time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, aiMsg]);
-    }, 1500);
+    }
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-120px)]">
+    <div className="flex flex-col md:flex-row gap-6 h-[1000px] md:h-[calc(100vh-120px)] transition-colors duration-200">
       
-      {/* LEFT CHAT CORE VIEWPORT CONTAINER */}
-      <div className="flex-1 bg-white border border-slate-200/70 rounded-2xl shadow-sm flex flex-col overflow-hidden h-full">
+      {/* CHAT VIEWPORT */}
+      <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/80 rounded-2xl shadow-sm flex flex-col overflow-hidden h-full transition-colors duration-200">
         
-        {/* TOP COMPONENT INFO BAR */}
-        <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+        {/* HEADER */}
+        <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 dark:bg-indigo-500 flex items-center justify-center text-white shadow-sm">
               <Bot size={20} />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+              <h3 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-1.5">
                 Financial Copilot
-                <span className="text-[10px] bg-indigo-50 text-indigo-600 border border-indigo-100 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-                  <Sparkles size={10} className="fill-indigo-100" /> AI Engine
+                <span className="text-[10px] bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                  <Sparkles size={10} className="fill-emerald-100 dark:fill-emerald-900" /> Live LLM
                 </span>
               </h3>
-              <p className="text-xs text-slate-400 font-medium">Online • Indexing live transaction data fields</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">Connected via Gemini API</p>
             </div>
           </div>
         </div>
 
-        {/* MESSAGES TIMELINE BOX SCROLLER */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/30">
+        {/* MESSAGES SCROLLER */}
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/30 dark:bg-slate-900/50">
           {messages.map((msg) => {
             const isAI = msg.sender === 'ai';
             return (
               <div key={msg.id} className={`flex gap-3 max-w-[85%] ${isAI ? 'self-start' : 'self-end flex-row-reverse ml-auto'}`}>
-                {/* Avatar Icon */}
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 shadow-xs
-                  ${isAI ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-slate-900 text-white'}`}
+                  ${isAI ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20' : 'bg-slate-900 dark:bg-slate-700 text-white'}`}
                 >
                   {isAI ? <Bot size={16} /> : <User size={16} />}
                 </div>
 
-                {/* Message Content Bubble */}
                 <div className="space-y-1">
-                  <div className={`p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm border
+                  <div className={`p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm border whitespace-pre-wrap
                     ${isAI 
-                      ? 'bg-white text-slate-800 border-slate-200/60 rounded-tl-none' 
-                      : 'bg-indigo-600 text-white border-indigo-600 rounded-tr-none'}`}
+                      ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200/60 dark:border-slate-700 rounded-tl-none' 
+                      : 'bg-indigo-600 dark:bg-indigo-500 text-white border-indigo-600 dark:border-indigo-500 rounded-tr-none'}`}
                   >
                     {msg.text}
                   </div>
-                  <span className={`text-[10px] text-slate-400 font-bold block ${!isAI && 'text-right'}`}>
+                  <span className={`text-[10px] text-slate-400 dark:text-slate-500 font-bold block ${!isAI && 'text-right'}`}>
                     {msg.time}
                   </span>
                 </div>
@@ -130,38 +131,36 @@ function ChatCopilot() {
             );
           })}
 
-          {/* Conditional Typing Processing Indicator */}
           {isTyping && (
             <div className="flex gap-3 max-w-[80%] self-start">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shadow-xs">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center shadow-xs">
                 <Loader2 size={16} className="animate-spin" />
               </div>
-              <div className="bg-white border border-slate-200/60 p-3.5 rounded-2xl rounded-tl-none text-xs font-semibold text-slate-400 flex items-center gap-2 shadow-sm">
-                Copilot is computing ledger matrices...
+              <div className="bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 p-3.5 rounded-2xl rounded-tl-none text-xs font-semibold text-slate-400 dark:text-slate-500 flex items-center gap-2 shadow-sm">
+                Generating response...
               </div>
             </div>
           )}
-          <div ref={messagesEndRef} />
         </div>
 
-        {/* CHAT INPUT FORM BOARD CONTAINER */}
-        <div className="p-4 border-t border-slate-100 bg-white">
+        {/* INPUT FORM */}
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <form 
             onSubmit={(e) => { e.preventDefault(); handleSendMessage(input); }}
-            className="flex items-center gap-2 bg-slate-50 border border-slate-200 focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-100 rounded-xl p-1.5 transition-all"
+            className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus-within:border-indigo-500 dark:focus-within:border-indigo-400 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-500/20 rounded-xl p-1.5 transition-all"
           >
             <input
               type="text"
-              placeholder="Ask Copilot e.g., 'Am I overspending on food?'"
+              placeholder="Ask Copilot about your finances..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={isTyping}
-              className="flex-1 bg-transparent border-none outline-none text-sm px-3 py-2 text-slate-900 placeholder-slate-400 disabled:opacity-50"
+              className="flex-1 bg-transparent border-none outline-none text-sm px-3 py-2 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={!input.trim() || isTyping}
-              className="p-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:hover:bg-indigo-600 transition-all shadow-xs shrink-0"
+              className="p-2.5 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-40 disabled:hover:bg-indigo-600 dark:disabled:hover:bg-indigo-500 transition-all shadow-xs shrink-0 cursor-pointer"
             >
               <Send size={14} />
             </button>
@@ -169,10 +168,10 @@ function ChatCopilot() {
         </div>
       </div>
 
-      {/* RIGHT SIDEBAR PANEL: CONTEXT SHORTCUT TOOLS */}
-      <div className="w-full md:w-64 bg-white border border-slate-200/70 rounded-2xl p-5 shadow-sm h-fit space-y-5">
-        <div className="flex items-center gap-2 text-slate-400 font-bold text-xs uppercase tracking-wider border-b border-slate-100 pb-3">
-          <HelpCircle size={14} /> Suggested Audits
+      {/* SIDEBAR */}
+      <div className="w-full md:w-64 bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm h-fit space-y-5 transition-colors duration-200">
+        <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 font-bold text-xs uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-3">
+          <HelpCircle size={14} /> Try These Prompts
         </div>
         
         <div className="flex flex-col gap-2">
@@ -181,17 +180,17 @@ function ChatCopilot() {
               key={index}
               onClick={() => handleSendMessage(prompt.query)}
               disabled={isTyping}
-              className="text-left w-full p-3 bg-slate-50 hover:bg-indigo-50/50 hover:text-indigo-700 rounded-xl text-xs font-semibold text-slate-600 border border-slate-100 hover:border-indigo-100/60 transition-all flex items-start gap-2 group disabled:opacity-50 disabled:hover:bg-slate-50 disabled:hover:text-slate-600 disabled:hover:border-slate-100"
+              className="text-left w-full p-3 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10 hover:text-indigo-700 dark:hover:text-indigo-300 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-700 hover:border-indigo-100/60 dark:hover:border-indigo-500/30 transition-all flex items-start gap-2 group disabled:opacity-50 disabled:hover:bg-slate-50 dark:disabled:hover:bg-slate-800 disabled:hover:text-slate-600 dark:disabled:hover:text-slate-300 disabled:hover:border-slate-100 dark:disabled:hover:border-slate-700 cursor-pointer"
             >
-              <MessageSquare size={14} className="shrink-0 text-slate-400 group-hover:text-indigo-500 mt-0.5" />
+              <MessageSquare size={14} className="shrink-0 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 mt-0.5" />
               <span>{prompt.label}</span>
             </button>
           ))}
         </div>
         
-        <div className="bg-indigo-50/40 border border-indigo-100/40 p-4 rounded-xl text-[11px] leading-relaxed text-slate-500 font-medium">
-          <span className="font-bold text-indigo-700 block mb-1">Architecture Note:</span>
-          In Phase 2, this input form can connect directly to an Express router endpoint like <code className="bg-white px-1 py-0.5 rounded text-indigo-600 font-bold">POST /api/chat</code> powered by LangChain or the Google Gemini API using Retrieval-Augmented Generation (RAG).
+        <div className="bg-indigo-50/40 dark:bg-indigo-500/10 border border-indigo-100/40 dark:border-indigo-500/20 p-4 rounded-xl text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 font-medium">
+          <span className="font-bold text-indigo-700 dark:text-indigo-400 block mb-1">System Live:</span>
+          Copilot is now actively reading your MongoDB ledger. When you ask a question, the backend formats your recent transactions and passes them to the Gemini API for intelligent analysis.
         </div>
       </div>
 

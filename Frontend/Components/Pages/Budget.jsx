@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import { useEffect } from 'react';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 function Budget() {
   // --- STATE MANAGEMENT ---
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,10 +35,11 @@ function Budget() {
   useEffect(() => {
     const fetchBudgetSummary = async () => {
       try {
-        const response = await fetch('http://localhost:3000/budgets/summary', {
+        const response = await fetch(`${BASE_URL}/budgets/summary`, {
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}` // Include token for authentication
           }
         });
         if (!response.ok) {
@@ -53,10 +55,11 @@ function Budget() {
 
     const fetchUntrackedBudget = async () => {
       try {
-        const response = await fetch('http://localhost:3000/budgets/untracked', {
+        const response = await fetch(`${BASE_URL}/budgets/untracked`, {
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
         if (!response.ok) {
@@ -73,10 +76,11 @@ function Budget() {
 
     const fetchGlobalLimit = async () => {
       try {
-        const response = await fetch('http://localhost:3000/budget/global', {
+        const response = await fetch(`${BASE_URL}/budget/global`, {
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
         if (!response.ok) {
@@ -99,9 +103,12 @@ function Budget() {
   ]);
   const handleDeleteCategory = async (categoryToDelete) => {
     try {
-      const response = await fetch(`http://localhost:3000/budget/track/${categoryToDelete}`, {
+      const response = await fetch(`${BASE_URL}/budget/track/${categoryToDelete}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
       if (!response.ok) {
         toast.error('Failed to delete category limit. Please try again.');
@@ -140,9 +147,12 @@ function Budget() {
     if (modalType === 'global') {
       try {
         // 1. Added the full localhost URL so it hits Express
-        const response = await fetch('http://localhost:3000/budget', {
+        const response = await fetch(`${BASE_URL}/budget`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
           body: JSON.stringify({ "totalAmount": Number(budgetForm.limitAmount) }) // Converted to Number just to be safe!
         });
 
@@ -160,9 +170,12 @@ function Budget() {
       }
 
     } else {
-      const response = await fetch('http://localhost:3000/budget/track', {
+      const response = await fetch(`${BASE_URL}/budget/track`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: JSON.stringify({
           category: budgetForm.category,
           amount: Number(budgetForm.limitAmount)
@@ -181,17 +194,17 @@ function Budget() {
   };
 
   return (
-    <div className="relative space-y-6 max-w-4xl mx-auto pb-10">
+    <div className="relative space-y-6 max-w-4xl mx-auto pb-10 transition-colors duration-200">
 
       {/* 1. HEADER SECTION */}
       <header className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Monthly Budget</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Track and enforce your spending limits</p>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Monthly Budget</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Track and enforce your spending limits</p>
         </div>
         <button
           onClick={() => openModal('category')}
-          className="flex items-center gap-2 cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
+          className="flex items-center gap-2 cursor-pointer bg-indigo-600 dark:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors shadow-sm"
         >
           <Plus size={16} /> Add / Edit Category Limit
         </button>
@@ -199,18 +212,18 @@ function Budget() {
 
       {/* 2. GLOBAL MONTHLY CEILING CARD */}
       {/* 2. GLOBAL MONTHLY CEILING CARD */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200/70 shadow-sm space-y-4">
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-sm space-y-4 transition-colors duration-200">
         <div className="flex justify-between items-start">
           <div>
 
             {/* --- MODIFIED HEADER WITH VISIBLE EDIT BUTTON --- */}
             <div className="flex items-center gap-3 mb-1">
-              <span className="text-[11px] font-bold tracking-wider text-slate-500 uppercase">
+              <span className="text-[11px] font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">
                 Absolute Monthly Limit
               </span>
               <button
                 onClick={() => openModal('global')}
-                className="flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-600 cursor-pointer hover:bg-indigo-100 hover:text-indigo-700 rounded-md transition-colors border border-indigo-100 shadow-sm"
+                className="flex items-center gap-1 px-2 py-0.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-500/20 hover:text-indigo-700 dark:hover:text-indigo-300 rounded-md transition-colors border border-indigo-100 dark:border-indigo-500/20 shadow-sm"
                 title="Edit Total Limit"
               >
                 <Pencil size={12} strokeWidth={2.5} />
@@ -219,21 +232,21 @@ function Budget() {
             </div>
             {/* ------------------------------------------------ */}
 
-            <h3 className="text-3xl font-black text-slate-900">
+            <h3 className="text-3xl font-black text-slate-900 dark:text-white">
               ₹{absoluteTotalSpent.toLocaleString('en-IN')}
             </h3>
-            <p className="text-sm font-medium text-slate-500 mt-1">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">
               of ₹{globalLimit.toLocaleString('en-IN')} total limit
             </p>
           </div>
           <div className="text-right mt-1">
-            <span className={`text-3xl font-black ${globalPercentage > 90 ? 'text-rose-600' : 'text-indigo-600'}`}>
+            <span className={`text-3xl font-black ${globalPercentage > 90 ? 'text-rose-600 dark:text-rose-400' : 'text-indigo-600 dark:text-indigo-400'}`}>
               {globalPercentage}%
             </span>
           </div>
         </div>
 
-        <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+        <div className="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${globalPercentage > 90 ? 'bg-rose-500' : 'bg-indigo-500'}`}
             style={{ width: `${Math.min(globalPercentage, 100)}%` }}
@@ -243,7 +256,7 @@ function Budget() {
 
       {/* 3. TRACKED CATEGORIES GRID */}
       <div className="space-y-4">
-        <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider pl-1">Tracked Categories</h4>
+        <h4 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider pl-1">Tracked Categories</h4>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Budgets.map((budget) => {
@@ -257,25 +270,25 @@ function Budget() {
             let displayPercentage = rawPercentage.toFixed(1);
 
             let trackColor = "bg-emerald-500";
-            let badgeStyle = "bg-emerald-50 text-emerald-700";
+            let badgeStyle = "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400";
             let icon = <CheckCircle2 size={14} />;
 
             if (rawPercentage >= 100) {
               trackColor = "bg-rose-500";
-              badgeStyle = "bg-rose-50 text-rose-700";
+              badgeStyle = "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400";
               icon = <Flame size={14} />;
             } else if (rawPercentage >= 80) {
               trackColor = "bg-amber-500";
-              badgeStyle = "bg-amber-50 text-amber-700";
+              badgeStyle = "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400";
               icon = <AlertTriangle size={14} />;
             }
 
             return (
-              <div key={budget.category || Math.random()} className="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-md transition-all group">
+              <div key={budget.category || Math.random()} className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-sm hover:shadow-md transition-all group">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h5 className="font-bold text-slate-900">{budget.category || "Loading..."}</h5>
-                    <p className="text-xs text-slate-500 mt-1 font-medium">
+                    <h5 className="font-bold text-slate-900 dark:text-white">{budget.category || "Loading..."}</h5>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
                       ₹{spent.toLocaleString('en-IN')} / ₹{amount.toLocaleString('en-IN')}
                     </p>
                   </div>
@@ -284,7 +297,7 @@ function Budget() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleDeleteCategory(budget.category)}
-                      className="p-1.5 text-rose-400 bg-rose-50 hover:text-rose-600 hover:bg-rose-100 rounded-lg transition-all cursor-pointer"
+                      className="p-1.5 text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded-lg transition-all cursor-pointer"
                       title="Delete Limit"
                     >
                       <Trash2 size={16} />
@@ -298,13 +311,13 @@ function Budget() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full ${trackColor} transition-all duration-300`}
                       style={{ width: `${cappedPercentage}%` }}
                     ></div>
                   </div>
-                  <div className="text-right text-[10px] font-bold text-slate-400">
+                  <div className="text-right text-[10px] font-bold text-slate-400 dark:text-slate-500">
                     {displayPercentage}% Used
                   </div>
                 </div>
@@ -318,20 +331,20 @@ function Budget() {
       {unbudgetedSpending.length > 0 && (
         <div className="space-y-4 mt-8">
           <div className="flex items-center gap-2 pl-1">
-            <Info size={16} className="text-slate-400" />
-            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Unbudgeted Spending</h4>
+            <Info size={16} className="text-slate-400 dark:text-slate-500" />
+            <h4 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Unbudgeted Spending</h4>
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200/70 shadow-sm overflow-hidden divide-y divide-slate-100">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-sm overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 transition-colors duration-200">
             {unbudgetedSpending.map((item) => (
-              <div key={item.category} className="p-4 flex items-center justify-between bg-slate-50/50">
+              <div key={item.category} className="p-4 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
                 <div>
-                  <h5 className="font-bold text-slate-800 text-sm">{item.category}</h5>
-                  <p className="text-xs text-slate-500 font-medium">₹{item.spent.toLocaleString('en-IN')} spent with no active limit</p>
+                  <h5 className="font-bold text-slate-800 dark:text-white text-sm">{item.category}</h5>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">₹{item.spent.toLocaleString('en-IN')} spent with no active limit</p>
                 </div>
                 <button
                   onClick={() => openModal('category', item.category)}
-                  className="text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                  className="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                 >
                   + Set Limit
                 </button>
@@ -343,20 +356,20 @@ function Budget() {
 
       {/* 5. MULTI-PURPOSE MODAL OVERLAY */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl relative animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl relative animate-in fade-in zoom-in duration-200 transition-colors duration-200">
 
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full p-2 transition-colors"
+              className="absolute top-4 right-4 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full p-2 transition-colors"
             >
               <X size={16} />
             </button>
 
             <div className="p-6">
-              <div className="flex items-center gap-2 text-indigo-600 mb-6">
+              <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 mb-6">
                 <Sliders size={20} />
-                <h3 className="font-bold text-slate-900 text-lg">
+                <h3 className="font-bold text-slate-900 dark:text-white text-lg">
                   {modalType === 'global' ? 'Set Total Monthly Budget' : 'Configure Category Limit'}
                 </h3>
               </div>
@@ -366,10 +379,10 @@ function Budget() {
                 {/* Only show category dropdown if we are setting a category limit */}
                 {modalType === 'category' && (
                   <div>
-                    <label htmlFor="category" className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Category</label>
+                    <label htmlFor="category" className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Category</label>
                     <select
                       id="category" value={budgetForm.category} onChange={handleInputChange}
-                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                      className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900"
                     >
                       <option value="Food & Groceries">Food & Groceries</option>
                       <option value="Bills & EMIs">Bills & EMIs</option>
@@ -380,26 +393,26 @@ function Budget() {
                       <option value="Subscriptions & Entertainment">Subscriptions & Entertainment</option>
                       <option value="Investments & Savings">Investments & Savings</option>
                       <option value="Pharmacy & Medical">Medical</option>
-                      <option value="Others">Others</option>
+                      <option value="Others">Others</option> 
                     </select>
                   </div>
                 )}
 
                 <div>
-                  <label htmlFor="limitAmount" className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                  <label htmlFor="limitAmount" className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                     {modalType === 'global' ? 'Absolute Maximum (₹)' : 'Monthly Limit (₹)'}
                   </label>
                   <input
                     type="number" id="limitAmount" placeholder="e.g. 50000" required
                     value={budgetForm.limitAmount} onChange={handleInputChange}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-slate-900 font-semibold"
+                    className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 text-slate-900 dark:text-white font-semibold"
                   />
                   {modalType === 'global' && (
-                    <p className="text-xs text-slate-400 mt-2">This is the maximum amount you want to spend across ALL categories combined this month.</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">This is the maximum amount you want to spend across ALL categories combined this month.</p>
                   )}
                 </div>
 
-                <button type="submit" className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl text-sm hover:bg-indigo-700 mt-2">
+                <button type="submit" className="w-full py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-semibold rounded-xl text-sm hover:bg-indigo-700 dark:hover:bg-indigo-600 mt-2">
                   Save Budget
                 </button>
               </form>

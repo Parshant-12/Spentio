@@ -5,6 +5,7 @@ const cors = require('cors');
 const env = require('dotenv');
 const db = require('./db');
 const cron = require('node-cron');
+const fetchUser = require('./ Middleware/authmiddleware');
 env.config();
 app.use(express.json());
 app.use(cors());
@@ -16,90 +17,38 @@ app.use('/', authRoutes);
 
 //Transaction Routes
 const transactionRoutes = require('./Routes/transaction');
-app.use('/', transactionRoutes);
+app.use('/',fetchUser, transactionRoutes);
 
 
 //Udhar Routes
 const udharRoutes = require('./Routes/Udhar');
-app.use('/', udharRoutes);
+app.use('/',fetchUser, udharRoutes);
 
 
 // Budget Routes
 const budgetRoutes = require('./Routes/budget');
-app.use('/', budgetRoutes);
+app.use('/', fetchUser, budgetRoutes);
 
 
 // Loan and Subscription routes + cron jobs for auto-debit
-const Subscription = require('./Models/subscription');
-const Loan = require('./Models/loan');
-const Transaction = require('./Models/transaction');
-cron.schedule('0 0 * * *', async () => {
-    console.log('Running daily auto-debit check...');
-
-    // 1. Get today's date (e.g., the 24th)
-    const today = new Date().getDate();
-
-    try {
-        // 2. Find all subscriptions due today where auto-debit is enabled
-        const dueBills = await Subscription.find({
-            dueDate: today,
-            isAutoDebit: true
-        });
-
-        // 3. Loop through them and create standard Transactions
-        for (let bill of dueBills) {
-            await Transaction.create({
-                type: 'expense',
-                amount: bill.amount,
-                category: 'Subscriptions and Entertainment',
-                date: new Date(),
-                description: `${bill.name} (Auto-Debit)`
-            });
-            // Update lastProcessed so we don't double-charge them!
-            bill.lastProcessed = new Date();
-            await bill.save();
-        }
-    } catch (error) {
-        console.error('Cron Job Failed:', error);
-    }
-});
-
-cron.schedule('0 0 * * *', async () => {
-    console.log('Running daily auto-debit check...');
-
-    // 1. Get today's date (e.g., the 24th)
-    const today = new Date().getDate();
-
-    try {
-        // 2. Find all loans due today where auto-debit is enabled
-        const dueloans = await Loan.find({
-            dueDate: today,
-            isAutoDebit: true
-        });
-
-        // 3. Loop through them and create standard Transactions
-        for (let loan of dueloans) {
-            await Transaction.create({
-                type: 'expense',
-                amount: loan.amount,
-                category: 'Bills & EMIs',
-                date: new Date(),
-                description: `${loan.name} (Auto-Debit)`
-            });
-            // Update lastProcessed so we don't double-charge them!
-            loan.lastProcessed = new Date();
-            await loan.save();
-        }
-    } catch (error) {
-        console.error('Cron Job Failed:', error);
-    }
-});
+const cronJobs = require('./Jobs/cron_jobs');
 
 const loanSubscriptionRoutes = require('./Routes/loan_subscription');
-app.use('/', loanSubscriptionRoutes);
+app.use('/', fetchUser, loanSubscriptionRoutes);
 
+
+// Analysis Routes
 const analysisRoutes = require('./Routes/analysis');
-app.use('/', analysisRoutes);
+app.use('/', fetchUser, analysisRoutes);
+
+// AI Chat Route
+const chatRoutes = require('./Routes/chat');
+app.use('/', fetchUser, chatRoutes);
+
+
+// Settings Route
+const settingsRoutes = require('./Routes/settings');
+app.use('/',fetchUser, settingsRoutes);
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is running on port ${process.env.PORT}`);

@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const budgetTotalAmountSchema = new mongoose.Schema({
-    id: {type: String, required: true},
-    totalAmount: { type: Number, required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    totalAmount: { type: Number, required: true }
 });
 
 const BudgetTotalAmount = mongoose.model('BudgetTotalAmount', budgetTotalAmountSchema);

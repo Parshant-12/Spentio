@@ -4,7 +4,7 @@ const Transaction = require('../Models/transaction');
 
 router.get('/transactions', async (req, res) => {
     try {
-        const transactions = await Transaction.find();
+        const transactions = await Transaction.find({ user: req.user.id });
         res.status(200).json(transactions);
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch transactions" });
@@ -13,7 +13,7 @@ router.get('/transactions', async (req, res) => {
 router.get('/transactions/filter/:type', async (req, res) => {
     try {
         const { type } = req.params;
-        const transactions = await Transaction.find({ type: type });
+        const transactions = await Transaction.find({ type: type , user: req.user.id });
         res.status(200).json(transactions);
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch transactions" });
@@ -22,7 +22,7 @@ router.get('/transactions/filter/:type', async (req, res) => {
 router.get('/transactions/search/:searchTerm', async (req, res) => {
     try {
         const { searchTerm } = req.params;
-        const transactions = await Transaction.find({ description: { $regex: searchTerm, $options: 'i' } });
+        const transactions = await Transaction.find({ description: { $regex: searchTerm, $options: 'i' }, user: req.user.id });
         res.status(200).json(transactions);
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch transactions" });
@@ -32,11 +32,9 @@ router.get('/transactions/search/:searchTerm', async (req, res) => {
 router.post('/transactions', async (req, res) => {
     try {
         const data = req.body;
+        data.user = req.user.id; // Associate transaction with the logged-in user
         const newTransaction = new Transaction(data);
         const response = await newTransaction.save();
-        if (!response) {
-            return res.status(500).json({ error: "Internal Error:Failed to save transaction" });
-        }
         res.status(201).json({ message: "Transaction added successfully" });
     } catch (err) {
         res.status(500).json({ error: "Failed to add transaction" });
@@ -47,7 +45,8 @@ router.put('/transaction/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const data = req.body;
-        const response = await Transaction.findByIdAndUpdate(id, data, { new: true });
+        data.user = req.user.id;
+        const response = await Transaction.findOneAndUpdate({ _id: id, user: req.user.id }, data, { new: true });
         if (!response) {
             return res.status(404).json({ error: "Transaction not found" });
         }
@@ -60,8 +59,11 @@ router.put('/transaction/:id', async (req, res) => {
 router.delete('/transaction/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const response = await Transaction.findByIdAndDelete(id);
-        if (!response) {
+        const deletedTransaction = await Transaction.findOneAndDelete({
+            _id: id,
+            user: req.user.id 
+        });
+        if (!deletedTransaction) {
             return res.status(404).json({ error: "Transaction not found" });
         }
         res.status(200).json({ message: "Transaction deleted successfully" });

@@ -13,35 +13,38 @@ import Udhar from '../Components/Pages/Udhar';
 import Settings from '../Components/Pages/Settings';
 import Subscription from '../Components/Pages/Subscriptions';
 import Calculator from '../Components/Pages/Calculator';
+import PrivateRoute from '../Components/Layouts/PrivateRoutes';
+import ForgotPassword from '../Components/Authentication/ForgotPassword';
+import ResetPassword from '../Components/Authentication/ResetPassword';
+import Home from '../Components/Pages/Home';
+import ScrollTotop from '../Components/Layouts/ScrollTotop'
 
 function App() {
-  // Toggle this flag manually to change development layout views
-  const isAuthenticated = true; 
-
   return (
     <Router>
+      <ScrollTotop />
       <Routes>
-        <Route 
-          path='/' 
-          element={isAuthenticated ? <Navigate to="/Dashboard" /> : <Navigate to="/Login" />} 
-        />
-        
+
+        <Route path='/reset-password/:token' element={<ResetPassword/>} />
+        <Route path='/ForgotPassword' element={<ForgotPassword/>}/>
         <Route path='/Login' element={<Login />} />
         <Route path='/SignUp' element={<Signup />} />
+        <Route path='/' element={<Home/>}/>
 
-        {/* Everything inside here automatically gets the shared Sidebar and Header! */}
-        <Route element={<Layout />}>
-          <Route path='/Dashboard' element={<Dashboard />} />
-          <Route path='/Analysis' element={<Analysis />} />
-          <Route path='/AddTransaction' element={<AddTransaction />} />
-          <Route path='/TransactionsHistory' element={<TransactionsHistory />} />
-          <Route path='/AiChat' element={<AiChat />} />
-          <Route path='/Budget' element={<Budget />} />
-          <Route path='/BillsAndEMIs' element={<BillsAndEMIs />} />
-          <Route path='/Udhar' element={<Udhar />} />
-          <Route path='/settings' element={<Settings />} />
-          <Route path='/Subscription' element={<Subscription />} />
-          <Route path='/Calculator' element={<Calculator />} />
+        <Route element={<PrivateRoute />}>
+          <Route element={<Layout />}>
+            <Route path='/Dashboard' element={<Dashboard />} />
+            <Route path='/Analysis' element={<Analysis />} />
+            <Route path='/AddTransaction' element={<AddTransaction />} />
+            <Route path='/TransactionsHistory' element={<TransactionsHistory />} />
+            <Route path='/AiChat' element={<AiChat />} />
+            <Route path='/Budget' element={<Budget />} />
+            <Route path='/BillsAndEMIs' element={<BillsAndEMIs />} />
+            <Route path='/Udhar' element={<Udhar />} />
+            <Route path='/settings' element={<Settings />} />
+            <Route path='/Subscription' element={<Subscription />} />
+            <Route path='/Calculator' element={<Calculator />} />
+          </Route>
         </Route>
       </Routes>
     </Router>

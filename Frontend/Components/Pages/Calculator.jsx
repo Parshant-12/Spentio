@@ -61,26 +61,26 @@ function Tools() {
   }, [interestInputs]);
 
   return (
-    <div className="space-y-8 max-w-5xl">
+    <div className="space-y-8 max-w-5xl transition-colors duration-200">
 
       {/* HEADER & SWITCH RIBBON */}
       <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Financial Math Sandboxes</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Model capital structures, compound yield projections, and amortization metrics.</p>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Financial Math Sandboxes</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Model capital structures, compound yield projections, and amortization metrics.</p>
         </div>
 
         {/* COMPONENT TAB NAVIGATION BAR */}
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200/40 shadow-inner self-start sm:self-auto">
+        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200/40 dark:border-slate-700/50 shadow-inner self-start sm:self-auto transition-colors duration-200">
           <button
             onClick={() => setActiveTab('emi')}
-            className={`px-4 py-2 cursor-pointer rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'emi' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+            className={`px-4 py-2 cursor-pointer rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'emi' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <Calculator size={14} /> Loan EMI Engine
           </button>
           <button
             onClick={() => setActiveTab('interest')}
-            className={`px-4 py-2 cursor-pointer rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'interest' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+            className={`px-4 py-2 cursor-pointer rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'interest' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <Percent size={14} /> Yield & Interest
           </button>
@@ -92,30 +92,30 @@ function Tools() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
           {/* INPUT FORM BLOCK CONTAINER */}
-          <div className="bg-white border border-slate-200/70 rounded-2xl p-6 shadow-sm space-y-5 h-fit">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-50 pb-3">
-              <Coins className="text-indigo-600" size={16} /> Principal Variables
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm space-y-5 h-fit transition-colors duration-200">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
+              <Coins className="text-indigo-600 dark:text-indigo-400" size={16} /> Principal Variables
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Loan Principal Amount (INR)</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Loan Principal Amount (INR)</label>
                 <input
                   type="number" value={emiInputs.principal} onChange={(e) => setEmiInputs({ ...emiInputs, principal: e.target.value })}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-all"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Interest Rate (% P.A.)</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Interest Rate (% P.A.)</label>
                 <input
                   type="number" step="0.1" value={emiInputs.rate} onChange={(e) => setEmiInputs({ ...emiInputs, rate: e.target.value })}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-all"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Time (Years)</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Time (Years)</label>
                 <input
                   type="number" value={emiInputs.tenure} onChange={(e) => setEmiInputs({ ...emiInputs, tenure: e.target.value })}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-all"
                 />
               </div>
             </div>
@@ -123,33 +123,33 @@ function Tools() {
 
           {/* DYNAMIC METRIC GENERATION PANEL CARD OVERVIEWS */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white border border-slate-200/70 rounded-2xl p-6 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div className="p-4 bg-indigo-50/40 rounded-2xl border border-indigo-100/30 space-y-1">
-                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Calculated Monthly EMI</span>
-                <p className="text-3xl font-black text-indigo-600 tracking-tight">₹{emiResults.monthlyEmi.toLocaleString('en-IN')}</p>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-6 transition-colors duration-200">
+              <div className="p-4 bg-indigo-50/40 dark:bg-indigo-500/10 rounded-2xl border border-indigo-100/30 dark:border-indigo-500/20 space-y-1">
+                <span className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">Calculated Monthly EMI</span>
+                <p className="text-3xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight">₹{emiResults.monthlyEmi.toLocaleString('en-IN')}</p>
               </div>
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
-                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Interest Component</span>
-                <p className="text-xl font-bold text-slate-800 tracking-tight">₹{emiResults.totalInterest.toLocaleString('en-IN')}</p>
+              <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-1">
+                <span className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">Interest Component</span>
+                <p className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">₹{emiResults.totalInterest.toLocaleString('en-IN')}</p>
               </div>
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
-                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Total Absolute Payment</span>
-                <p className="text-xl font-bold text-slate-800 tracking-tight">₹{emiResults.totalPayment.toLocaleString('en-IN')}</p>
+              <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-1">
+                <span className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">Total Absolute Payment</span>
+                <p className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">₹{emiResults.totalPayment.toLocaleString('en-IN')}</p>
               </div>
             </div>
 
             {/* FORMULA ARCHITECTURE BLUEPRINT NOTES EXPLANATION */}
-            <div className="bg-white border border-slate-200/70 rounded-2xl p-6 shadow-sm space-y-3">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm space-y-3 transition-colors duration-200">
+              <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                 <HelpCircle size={14} /> System Formula Insight
               </h4>
-              <p className="text-xs text-slate-600 leading-relaxed font-medium">
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
                 Loan calculations utilize the standard mathematical monthly reducing amortization framework model:
               </p>
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center font-mono text-sm text-indigo-600 font-bold overflow-x-auto">
+              <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 text-center font-mono text-sm text-indigo-600 dark:text-indigo-400 font-bold overflow-x-auto">
                 E = [P × r × (1 + r)<sup>n</sup>] / [(1 + r)<sup>n</sup> - 1]
               </div>
-              <p className="text-[11px] text-slate-400 leading-normal">
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-normal">
                 Where P represents absolute principal volume, r defines monthly compounded fractional conversion parameters, and n targets total monthly billing iteration limits.
               </p>
             </div>
@@ -163,47 +163,47 @@ function Tools() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
           {/* CONTROL BOX PACKET ELEMENT */}
-          <div className="bg-white border border-slate-200/70 rounded-2xl p-6 shadow-sm space-y-5 h-fit">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-50 pb-3">
-              <RefreshCw className="text-indigo-600" size={15} /> Compounding Variables
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm space-y-5 h-fit transition-colors duration-200">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
+              <RefreshCw className="text-indigo-600 dark:text-indigo-400" size={15} /> Compounding Variables
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Compounding Routine Mode</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Compounding Routine Mode</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button" onClick={() => setInterestInputs({ ...interestInputs, type: 'simple' })}
-                    className={`py-2 cursor-pointer rounded-xl text-xs font-bold border transition-all ${interestInputs.type === 'simple' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-500'}`}
+                    className={`py-2 cursor-pointer rounded-xl text-xs font-bold border transition-all ${interestInputs.type === 'simple' ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'}`}
                   >
                     Simple
                   </button>
                   <button
                     type="button" onClick={() => setInterestInputs({ ...interestInputs, type: 'compound' })}
-                    className={`py-2 cursor-pointer rounded-xl text-xs font-bold border transition-all ${interestInputs.type === 'compound' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-500'}`}
+                    className={`py-2 cursor-pointer rounded-xl text-xs font-bold border transition-all ${interestInputs.type === 'compound' ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'}`}
                   >
                     Compound
                   </button>
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Initial Deposit Principal (INR)</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Initial Deposit Principal (INR)</label>
                 <input
                   type="number" value={interestInputs.principal} onChange={(e) => setInterestInputs({ ...interestInputs, principal: e.target.value })}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-all"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Expected Yield Rate (% P.A.)</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Expected Yield Rate (% P.A.)</label>
                 <input
                   type="number" step="0.01" value={interestInputs.rate} onChange={(e) => setInterestInputs({ ...interestInputs, rate: e.target.value })}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-all"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Time (Years)</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Time (Years)</label>
                 <input
                   type="number" value={interestInputs.time} onChange={(e) => setInterestInputs({ ...interestInputs, time: e.target.value })}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-all"
                 />
               </div>
             </div>
@@ -211,20 +211,20 @@ function Tools() {
 
           {/* PROJECTED INCREMENTAL COMPOUND RETURN DATA OUTPUT DISPLAYS */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white border border-slate-200/70 rounded-2xl p-6 shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="p-5 bg-emerald-50/40 rounded-2xl border border-emerald-100/30 space-y-1">
-                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Estimated Net Interest Earned</span>
-                <p className="text-3xl font-black text-emerald-600 tracking-tight">₹{interestResults.interestEarned.toLocaleString('en-IN')}</p>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-6 transition-colors duration-200">
+              <div className="p-5 bg-emerald-50/40 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100/30 dark:border-emerald-500/20 space-y-1">
+                <span className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">Estimated Net Interest Earned</span>
+                <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">₹{interestResults.interestEarned.toLocaleString('en-IN')}</p>
               </div>
-              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
-                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Terminal Maturity Amount</span>
-                <p className="text-3xl font-black text-slate-900 tracking-tight">₹{interestResults.maturityAmount.toLocaleString('en-IN')}</p>
+              <div className="p-5 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-1">
+                <span className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">Terminal Maturity Amount</span>
+                <p className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">₹{interestResults.maturityAmount.toLocaleString('en-IN')}</p>
               </div>
             </div>
 
-            <div className="bg-white border border-slate-200/70 rounded-2xl p-6 shadow-sm space-y-2 text-xs font-semibold text-slate-500 flex items-center justify-between">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm space-y-2 text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-between transition-colors duration-200">
               <span>Overall Capital Growth Multiple Trajectory Shift:</span>
-              <span className="text-indigo-600 font-bold font-mono">
+              <span className="text-indigo-600 dark:text-indigo-400 font-bold font-mono">
                 +{((interestResults.maturityAmount / (interestInputs.principal || 1) - 1) * 100).toFixed(1)}% yield accumulation
               </span>
             </div>

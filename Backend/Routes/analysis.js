@@ -1,87 +1,71 @@
-// routes/analysis.js
 const express = require('express');
 const router = express.Router();
-const Transaction = require('../Models/transaction');
+const Transaction = require('../Models/transaction'); // Adjust path to match your folder structure
+const mongoose = require('mongoose');
 
 router.get('/analysis', async (req, res) => {
-  try {
-    const { startDate, endDate, prevStartDate, prevEndDate } = req.query;
+    try {
+        // 1. Extract dates from the URL query parameters
+        const { startDate, endDate, prevStartDate, prevEndDate } = req.query;
 
-    // Convert strings to Date objects
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const prevStart = new Date(prevStartDate);
-    const prevEnd = new Date(prevEndDate);
+        const currentStart = new Date(startDate);
+        const currentEnd = new Date(endDate);
+        const prevStart = new Date(prevStartDate);
+        const prevEnd = new Date(prevEndDate);
 
-    // 1. Current Period Total & Categories
-    const currentPeriodData = await Transaction.aggregate([
-      { 
-        $match: { 
-          user: req.user._id, 
-          date: { $gte: start, $lte: end },
-          type: 'expense' // Assuming you track income/expense
-        } 
-      },
-      {
-        $group: {
-          _id: '$category',
-          totalAmount: { $sum: '$amount' }
-        }
-      },
-      { $sort: { totalAmount: -1 } } // Sort largest to smallest
-    ]);
+        const userId = new mongoose.Types.ObjectId(req.user.id);
 
-    // 2. Previous Period Total (For Variance)
-    const previousPeriodData = await Transaction.aggregate([
-      { 
-        $match: { 
-          user: req.user._id, 
-          date: { $gte: prevStart, $lte: prevEnd },
-          type: 'expense' 
-        } 
-      },
-      {
-        $group: {
-          _id: null,
-          totalAmount: { $sum: '$amount' }
-        }
-      }
-    ]);
+        // 2. Fetch all raw transactions for the current period (for the bar chart buckets)
+        const rawTransactions = await Transaction.find({
+            user: userId,
+            type: 'expense',
+            date: { $gte: currentStart, $lte: currentEnd }
+        });
 
-    // Calculate totals
-    const currentTotal = currentPeriodData.reduce((acc, curr) => acc + curr.totalAmount, 0);
-    const previousTotal = previousPeriodData.length > 0 ? previousPeriodData[0].totalAmount : 0;
+        // 3. Calculate Current Period Total
+        const currentPeriodData = await Transaction.aggregate([
+            { $match: { user: userId, type: 'expense', date: { $gte: currentStart, $lte: currentEnd } } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+        const currentTotal = currentPeriodData.length > 0 ? currentPeriodData[0].total : 0;
 
-    // Format Top Categories (Take top 3, calculate percentages)
-    const topCategories = currentPeriodData.slice(0, 3).map(cat => ({
-      label: cat._id,
-      amount: cat.totalAmount,
-      percentage: currentTotal > 0 ? ((cat.totalAmount / currentTotal) * 100).toFixed(1) : 0
-    }));
+        // 4. Calculate Previous Period Total (for Variance)
+        const prevPeriodData = await Transaction.aggregate([
+            { $match: { user: userId, type: 'expense', date: { $gte: prevStart, $lte: prevEnd } } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+        const previousTotal = prevPeriodData.length > 0 ? prevPeriodData[0].total : 0;
 
-    // 3. Time-Series / Weekly Split (Simplified into 4 buckets for UI)
-    // In a real app you'd group by $week, but here we'll let frontend bucket the days 
-    // for exact alignment with your 4-bar UI.
-    const timeSeriesData = await Transaction.find({
-        user: req.user._id, 
-        date: { $gte: start, $lte: end },
-        type: 'expense'
-    }).select('amount date');
+        // 5. Calculate Top Categories (Group by category, sum amounts, sort descending)
+        const topCategoriesData = await Transaction.aggregate([
+            { $match: { user: userId, type: 'expense', date: { $gte: currentStart, $lte: currentEnd } } },
+            { $group: { _id: "$category", amount: { $sum: "$amount" } } },
+            { $sort: { amount: -1 } }, // Sort highest to lowest
+            { $limit: 3 } // Grab only the top 3
+        ]);
 
-    res.json({
-      success: true,
-      data: {
-        currentTotal,
-        previousTotal,
-        topCategories,
-        rawTransactions: timeSeriesData // Frontend will split this into the 4 bars
-      }
-    });
+        // Map the top categories to include the percentage your React UI expects
+        const topCategories = topCategoriesData.map(cat => ({
+            label: cat._id,
+            amount: cat.amount,
+            percentage: currentTotal > 0 ? ((cat.amount / currentTotal) * 100).toFixed(1) : 0
+        }));
 
-  } catch (error) {
-    console.error('Analysis Error:', error);
-    res.status(500).json({ success: false, message: 'Server error crunching data' });
-  }
+        // 6. Send the payload back to React
+        res.status(200).json({
+            success: true,
+            data: {
+                currentTotal,
+                previousTotal,
+                topCategories,
+                rawTransactions
+            }
+        });
+
+    } catch (error) {
+        console.error("Analysis Calculation Error:", error);
+        res.status(500).json({ success: false, error: "Failed to generate analysis" });
+    }
 });
 
 module.exports = router;

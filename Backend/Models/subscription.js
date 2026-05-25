@@ -1,32 +1,37 @@
 const mongoose = require('mongoose');
 
 const subscriptionSchema = new mongoose.Schema({
-  name: { 
-    type: String, 
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  name: {
+    type: String,
     required: true,
     trim: true // e.g., "Netflix", "AWS Hosting"
   },
-  amount: { 
-    type: Number, 
+  amount: {
+    type: Number,
     required: true,
-    min: 0 
+    min: 0
   },
-  billingCycle: { 
-    type: String, 
-    enum: ['monthly', 'yearly'], 
-    default: 'monthly' 
+  billingCycle: {
+    type: String,
+    enum: ['monthly', 'yearly'],
+    default: 'monthly'
   },
-  dueDate: { 
-    type: Number, 
-    required: true, 
-    min: 1, 
+  dueDate: {
+    type: Number,
+    required: true,
+    min: 1,
     max: 31 // The day of the month the bill is due
   },
-  isAutoDebit: { 
-    type: Boolean, 
-    default: false 
+  isAutoDebit: {
+    type: Boolean,
+    default: false
   },
-  lastProcessed: { 
+  lastProcessed: {
     type: Date,
     default: null // Tracks the exact date the cron job last posted this to the Transactions ledger
   }

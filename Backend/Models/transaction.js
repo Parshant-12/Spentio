@@ -1,34 +1,39 @@
 const mongoose = require('mongoose');
 
 const TransactionSchema = new mongoose.Schema({
-    type: { 
-        type: String, 
-        enum: ['expense', 'income', 'transfer'], 
-        required: true 
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    type: {
+        type: String,
+        enum: ['expense', 'income', 'transfer'],
+        required: true
     },
     amount: {
-        type: Number, 
-        required: true 
+        type: Number,
+        required: true
     },
-    category: { 
-        type: String, 
-        required: function() { return this.type !== 'transfer'; }
+    category: {
+        type: String,
+        required: function () { return this.type !== 'transfer'; }
     },
-    date: { 
-        type: Date, 
-        required: true 
+    date: {
+        type: Date,
+        required: true
     },
-    description: { 
+    description: {
         type: String,
         maxlength: 100
     },
     fromAccount: {
         type: String,
-        required: function() { return this.type === 'transfer'; }
+        required: function () { return this.type === 'transfer'; }
     },
     toAccount: {
         type: String,
-        required: function() { return this.type === 'transfer'; }
+        required: function () { return this.type === 'transfer'; }
     }
 });
 

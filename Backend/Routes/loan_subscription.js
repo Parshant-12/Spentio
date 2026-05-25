@@ -6,11 +6,9 @@ const Subscription = require('../Models/subscription');
 router.post('/loan', async (req, res) => {
     try {
         const data = req.body;
+        data.user = req.user.id;
         const newLoan = new Loan(data);
         const response = await newLoan.save();
-        if (!response) {
-            return res.status(500).json({ error: "Internal Error:Failed to save loan" });
-        }
         res.status(201).json({ message: "Loan added successfully" });
     } catch (err) {
         res.status(500).json({ error: "Failed to add loan" });
@@ -20,11 +18,9 @@ router.post('/loan', async (req, res) => {
 router.post('/subscription', async (req, res) => {
     try {
         const data = req.body;
+        data.user = req.user.id;
         const newSubscription = new Subscription(data);
         const response = await newSubscription.save();
-        if (!response) {
-            return res.status(500).json({ error: "Internal Error:Failed to save subscription" });
-        }
         res.status(201).json({ message: "Subscription added successfully" });
     } catch (err) {
         res.status(500).json({ error: "Failed to add subscription" });
@@ -33,15 +29,15 @@ router.post('/subscription', async (req, res) => {
 
 router.get('/loans', async (req, res) => {
     try {
-        const loans = await Loan.find();
+        const loans = await Loan.find({ user: req.user.id });
         res.status(200).json(loans);
-    } catch (err) {
+    } catch (err) { 
         res.status(500).json({ error: "Failed to fetch loans" });
     }
 });
 router.get('/subscriptions', async (req, res) => {
     try {
-        const subscriptions = await Subscription.find();
+        const subscriptions = await Subscription.find({ user: req.user.id });
         res.status(200).json(subscriptions);
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch subscriptions" });
@@ -51,7 +47,7 @@ router.get('/subscriptions', async (req, res) => {
 router.delete('/subscription/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const response = await Subscription.findByIdAndDelete(id);
+        const response = await Subscription.findOneAndDelete({ _id: id, user: req.user.id });
         if (!response) {
             return res.status(404).json({ error: "Subscription not found" });
         }
@@ -64,7 +60,7 @@ router.delete('/subscription/:id', async (req, res) => {
 router.delete('/loan/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const response = await Loan.findByIdAndDelete(id);
+        const response = await Loan.findOneAndDelete({ _id: id, user: req.user.id });
         if (!response) {
             return res.status(404).json({ error: "Loan not found" });
         }
