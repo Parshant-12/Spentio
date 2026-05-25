@@ -101,7 +101,7 @@ function Layout() {
                   <SidebarLink icon={<Receipt size={18} />} label="Analysis" active={location.pathname === '/analysis'} onClick={() => handleMobileNav('/analysis')} />
                   <SidebarLink icon={<Sparkles size={18} />} label="AI Copilot Chat" active={location.pathname === '/AiChat'} onClick={() => handleMobileNav('/AiChat')} />
                   <SidebarLink icon={<CreditCard size={18} />} label="Subscriptions & EMIs" active={location.pathname === '/BillsAndEMIs'} onClick={() => handleMobileNav('/BillsAndEMIs')} />
-                  <SidebarLink icon={<PlusCircle size={18} />} label="Create Budget" active={location.pathname === '/Budget'} onClick={() => handleMobileNav('/Budget')} />
+                  <SidebarLink icon={<PlusCircle size={18} />} label="Budget" active={location.pathname === '/Budget'} onClick={() => handleMobileNav('/Budget')} />
                   <SidebarLink icon={<Calculator size={18} />} label="Calculator" active={location.pathname === '/Calculator'} onClick={() => handleMobileNav('/Calculator')} />
                 </nav>
               </div>
@@ -152,7 +152,7 @@ function Layout() {
                 <SidebarLink icon={<Receipt size={18} />} label="Analysis" active={location.pathname === '/analysis'} onClick={() => navigate('/analysis')} />
                 <SidebarLink icon={<Sparkles size={18} />} label="AI Copilot Chat" active={location.pathname === '/AiChat'} onClick={() => navigate('/AiChat')} />
                 <SidebarLink icon={<CreditCard size={18} />} label="Subscriptions & EMIs" active={location.pathname === '/BillsAndEMIs'} onClick={() => navigate('/BillsAndEMIs')} />
-                <SidebarLink icon={<PlusCircle size={18} />} label="Create Budget" active={location.pathname === '/Budget'} onClick={() => navigate('/Budget')} />
+                <SidebarLink icon={<PlusCircle size={18} />} label="Budget" active={location.pathname === '/Budget'} onClick={() => navigate('/Budget')} />
                 <SidebarLink icon={<Calculator size={18} />} label="Calculator" active={location.pathname === '/Calculator'} onClick={() => navigate('/Calculator')} />
               </nav>
             </div>
