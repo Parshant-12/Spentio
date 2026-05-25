@@ -16,14 +16,15 @@ import {
   Menu,
   X
 } from 'lucide-react';
-
+import ConfirmModal from '../Layouts/Confirm';
 import ThemeToggle from './ThemeToggle';
 
 function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // State controller for the mobile navigation drawer
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Helper utility to safely route and close mobile drawer simultaneously
@@ -33,6 +34,7 @@ function Layout() {
   };
 
   const handleLogout = () => {
+    setIsDeleteModalOpen(false);
     localStorage.removeItem('token'); // Clear auth token from local storage
     toast.info("Logged out successfully.");
     navigate('/Login'); // Redirect to login page after logout
@@ -163,7 +165,7 @@ function Layout() {
           <SidebarLink icon={<ShieldCheck size={18} />} label="Subscription" active={location.pathname === '/Subscription'} onClick={() => navigate('/Subscription')} />
           <SidebarLink icon={<Settings size={18} />} label="Settings" active={location.pathname === '/settings'} onClick={() => navigate('/settings')} />
           <button
-            onClick={() => handleLogout()}
+            onClick={() => setIsDeleteModalOpen(true)}
             className="w-full flex cursor-pointer items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/10 transition-colors mt-1"
           >
             <LogOut size={18} /> <span>Logout Session</span>
@@ -188,7 +190,14 @@ function Layout() {
           z-index={9999}
         />
       </main>
-
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        title="Logging Out?"
+        message={`Are you sure you want to LogOut.`}
+        confirmText="Yes"
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 }

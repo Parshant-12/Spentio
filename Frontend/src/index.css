@@ -38,3 +38,17 @@
     background: var(--scrollbar-thumb-hover); 
   }
 }
+
+body {
+  /* Prevent text selection */
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+/* Optional: Allow selection in form inputs so users can still type */
+input, textarea {
+  -webkit-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}

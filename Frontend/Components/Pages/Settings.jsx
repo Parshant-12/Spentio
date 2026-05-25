@@ -3,11 +3,13 @@ import { User, Lock, Globe, Save, Loader2 } from 'lucide-react'; // Added Loader
 import { toast } from 'react-toastify';
 import Loader from '../Layouts/Loader';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import ConfirmModal from '../Layouts/Confirm';
 
 function Settings() {
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false); // NEW STATE for button protection
-  
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
   const [profile, setProfile] = useState({
     name: '',
     email: '',
@@ -51,17 +53,9 @@ function Settings() {
   }, []);
 
   const handleSave = async (e) => {
-    e.preventDefault();
-    
-    // Prevent double-clicking
-    if (isSaving) return;
-    setIsSaving(true);
-
     try {
       // 1. Construct payload without password by default
       const payload = {
-        name: profile.name,
-        email: profile.email,
         currency: profile.currency,
         notifications: profile.notifications
       };
@@ -92,7 +86,7 @@ function Settings() {
       console.error('Error saving settings:', error);
       toast.error('Network error. Failed to save settings.');
     } finally {
-      setIsSaving(false);
+      setIsDeleteModalOpen(false);
     }
   };
 
@@ -108,7 +102,7 @@ function Settings() {
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Manage your structural configuration preferences and identity metrics.</p>
       </header>
 
-      <form onSubmit={handleSave} className="space-y-6">
+      <form onSubmit={(e)=>{e.preventDefault(); setIsDeleteModalOpen(true)}} className="space-y-6">
 
         {/* SECTION 1: CORE IDENTITY */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-sm space-y-4 transition-colors duration-200">
@@ -119,6 +113,7 @@ function Settings() {
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Display Name</label>
               <input
+                required
                 type="text" value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} placeholder="Your Name"
                 className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-all"
               />
@@ -126,6 +121,7 @@ function Settings() {
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Email Anchor Address</label>
               <input
+                required
                 type="email" value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                 className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-all"
               />
@@ -179,9 +175,9 @@ function Settings() {
                 Leave blank to keep your current password.
               </p>
               <input
-                type="password" 
+                type="password"
                 value={profile.password} /* Binding value so it clears properly */
-                placeholder="••••••••••••" 
+                placeholder="••••••••••••"
                 onChange={(e) => setProfile({ ...profile, password: e.target.value })}
                 className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-all"
               />
@@ -192,23 +188,21 @@ function Settings() {
         {/* SAVE EXECUTION BUTTON */}
         <button
           type="submit"
-          disabled={isSaving}
           className="flex items-center justify-center gap-2 bg-indigo-600 dark:bg-indigo-500 px-6 py-3 rounded-xl text-white font-bold text-sm shadow-sm hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all ml-auto cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 dark:disabled:hover:bg-indigo-500"
         >
-          {isSaving ? (
-            <>
-              <Loader2 size={16} className="animate-spin" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <Save size={16} /> 
-              Save Configuration
-            </>
-          )}
+          <Save size={16} />
+          Save Configuration
         </button>
 
       </form>
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        title="Confirm Save!"
+        message={`Are you sure you want to save this data.`}
+        confirmText="Yes"
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleSave}
+      />
     </div>
   );
 }

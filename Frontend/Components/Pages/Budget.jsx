@@ -434,9 +434,10 @@ function Budget() {
                     {modalType === 'global' ? 'Absolute Maximum (₹)' : 'Monthly Limit (₹)'}
                   </label>
                   <input
+                    onWheel={(e)=>e.target.blur()}
                     type="number" id="limitAmount" placeholder="e.g. 50000" required
                     value={budgetForm.limitAmount} onChange={handleInputChange}
-                    className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 text-slate-900 dark:text-white font-semibold"
+                    className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 text-slate-900 dark:text-white font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   {modalType === 'global' && (
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">This is the maximum amount you want to spend across ALL categories combined this month.</p>

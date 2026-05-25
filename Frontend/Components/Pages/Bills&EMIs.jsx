@@ -326,11 +326,11 @@ function BillsAndEMIs() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Amount (₹)</label>
-                  <input required type="number" value={subscriptionForm.amount} onChange={(e) => setSubscriptionForm({ ...subscriptionForm, amount: e.target.value })} className="w-full border border-slate-200 dark:border-slate-700 bg-transparent dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400 outline-none" />
+                  <input onWheel={(e)=> e.target.blur()} required type="number" value={subscriptionForm.amount} onChange={(e) => setSubscriptionForm({ ...subscriptionForm, amount: e.target.value })} className="w-full border border-slate-200 dark:border-slate-700 bg-transparent dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Due Date (1-31)</label>
-                  <input required type="number" min="1" max="31" value={subscriptionForm.dueDate} onChange={(e) => setSubscriptionForm({ ...subscriptionForm, dueDate: e.target.value })} className="w-full border border-slate-200 dark:border-slate-700 bg-transparent dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400 outline-none" />
+                  <input onWheel={(e)=>e.target.blur()} required type="number" min="1" max="31" value={subscriptionForm.dueDate} onChange={(e) => setSubscriptionForm({ ...subscriptionForm, dueDate: e.target.value })} className="w-full border border-slate-200 dark:border-slate-700 bg-transparent dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-2">
@@ -359,19 +359,19 @@ function BillsAndEMIs() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Principal (₹)</label>
-                  <input required type="number" value={loanForm.totalPrincipal} onChange={(e) => setLoanForm({ ...loanForm, totalPrincipal: e.target.value })} className="w-full border border-slate-200 dark:border-slate-700 bg-transparent dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400" />
+                  <input onWheel={(e)=> e.target.blur()} required type="number" value={loanForm.totalPrincipal} onChange={(e) => setLoanForm({ ...loanForm, totalPrincipal: e.target.value })} className="w-full border border-slate-200 dark:border-slate-700 bg-transparent dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">EMI Amount (₹)</label>
-                  <input required type="number" value={loanForm.emiAmount} onChange={(e) => setLoanForm({ ...loanForm, emiAmount: e.target.value })} className="w-full border border-slate-200 dark:border-slate-700 bg-transparent dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400" />
+                  <input onWheel={(e)=> e.target.blur()} required type="number" value={loanForm.emiAmount} onChange={(e) => setLoanForm({ ...loanForm, emiAmount: e.target.value })} className="w-full border border-slate-200 dark:border-slate-700 bg-transparent dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Interest Rate (%)</label>
-                  <input required type="number" step="0.1" value={loanForm.interestRate} onChange={(e) => setLoanForm({ ...loanForm, interestRate: e.target.value })} className="w-full border border-slate-200 dark:border-slate-700 bg-transparent dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400" />
+                  <input onWheel={(e)=> e.target.blur()} required type="number" step="0.1" value={loanForm.interestRate} onChange={(e) => setLoanForm({ ...loanForm, interestRate: e.target.value })} className="w-full border border-slate-200 dark:border-slate-700 bg-transparent dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Due Date (1-31)</label>
-                  <input required type="number" min="1" max="31" value={loanForm.dueDate} onChange={(e) => setLoanForm({ ...loanForm, dueDate: e.target.value })} className="w-full border border-slate-200 dark:border-slate-700 bg-transparent dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400" />
+                  <input onWheel={(e)=> e.target.blur()} required type="number" min="1" max="31" value={loanForm.dueDate} onChange={(e) => setLoanForm({ ...loanForm, dueDate: e.target.value })} className="w-full border border-slate-200 dark:border-slate-700 bg-transparent dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                 </div>
                 <div className="flex items-center gap-2 mt-2">
                   <input type="checkbox" id="autoDebit" checked={loanForm.isAutoDebit} onChange={(e) => setLoanForm({ ...loanForm, isAutoDebit: e.target.checked })} className="rounded text-indigo-600 focus:ring-indigo-600 dark:focus:ring-indigo-400" />
