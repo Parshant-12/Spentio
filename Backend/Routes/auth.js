@@ -11,8 +11,8 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 router.post('/signup', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-
+    const { name, password } = req.body;
+    const email = req.body.email.toLowerCase();
     // 1. Check if email exists
     let user = await User.findOne({ email });
     if (user){
@@ -44,8 +44,8 @@ router.post('/signup', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-
+    const { password } = req.body;
+    const email = req.body.email.toLowerCase();
     // 1. Find User
     let user = await User.findOne({ email });
     if (!user){

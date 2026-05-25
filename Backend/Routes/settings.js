@@ -17,18 +17,36 @@ router.get('/settings', async (req, res) => {
 router.post('/settings', async (req, res) => {
     try {
         const { name, email, password } = req.body;
+        let updateFields = {};
+        
+        if (name) updateFields.name = name;
+        if (email) updateFields.email = email.toLowerCase();
+
+        if (password && password.trim() !== '') {
+            const salt = await bcrypt.genSalt(10);
+            updateFields.password = await bcrypt.hash(password, salt);
+        }
+
         const updatedData = await User.findByIdAndUpdate(
             req.user.id,
-            { name, email },
-            { new: true }
+            { $set: updateFields },
+            { new: true } 
         );
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-        updatedData.password = hashedPassword;
-        await updatedData.save();
+
+        if (!updatedData) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        updatedData.password = undefined;
+
         res.status(200).json({ success: true, data: updatedData });
+        
     } catch (error) {
-        res.status(500).json({ error, success: false, message: 'Failed to save settings' });
+        console.error("Settings Update Error:", error);
+        if (error.code === 11000) {
+             return res.status(400).json({ success: false, message: 'Email is already in use.' });
+        }
+        
+        res.status(500).json({ success: false, message: 'Failed to save settings' });
     }
 });
 

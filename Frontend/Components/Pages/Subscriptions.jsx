@@ -1,10 +1,13 @@
 import React from 'react';
 import { Check, Zap, Sparkles, ShieldCheck, CreditCard } from 'lucide-react';
+import { ToastContainer, toast } from 'react-toastify';
 
 function Subscription() {
   // Highlights premium status based on our layout placeholders
   const currentPlan = 'premium'; 
-
+  const handlePremium = () =>{
+    toast.warning("This Feature is under Development.")
+  }
   return (
     <div className="space-y-8 transition-colors duration-200">
       {/* HEADER SECTION */}
@@ -72,7 +75,7 @@ function Subscription() {
           </div>
           
           <button 
-            onClick={() => alert('Opening billing configuration portal framework context...')}
+            onClick={() => handlePremium()}
             className="w-full mt-8 py-3 bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 dark:hover:bg-indigo-600 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <CreditCard size={14} /> Manage Subscription Billing

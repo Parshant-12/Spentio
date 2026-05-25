@@ -1,10 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowRight, 
-  DollarSign, 
-  Wallet, 
-  Coins, 
+import {
+  ArrowRight,
+  DollarSign,
+  Wallet,
+  Coins,
   CreditCard,
   PieChart,
   TrendingUp,
@@ -13,13 +13,15 @@ import {
   Smartphone,
   PlayCircle
 } from 'lucide-react';
+import Desktop from '../../image-vids/Desktop.png'
+import Mobile from '../../image-vids/mobile.png'
 
 function Home() {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-50 font-sans overflow-hidden selection:bg-indigo-500/30">
-      
+
       {/* INLINE STYLES FOR CUSTOM ANIMATIONS 
         These keyframes create the smooth, constant floating motion for the background icons.
       */}
@@ -48,7 +50,7 @@ function Home() {
           <span className="text-xl font-black tracking-tight text-white">Spent.io</span>
         </div>
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/Login')} className="text-sm font-semibold text-slate-300 hover:text-white transition-colors">Log In</button>
+          <button onClick={() => navigate('/Login')} className="text-sm cursor-pointer font-semibold text-slate-300 hover:text-white transition-colors">Log In</button>
           <button onClick={() => navigate('/Signup')} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all transform hover:scale-105 cursor-pointer">
             Get Started
           </button>
@@ -57,7 +59,7 @@ function Home() {
 
       {/* --- HERO SECTION WITH ANIMATED ICONS --- */}
       <div className="relative pt-20 pb-32 px-6 max-w-7xl mx-auto">
-        
+
         {/* Animated Background Icons (Money/Dollar theme) */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
           <DollarSign size={80} className="absolute top-10 left-[10%] text-emerald-500/10 animate-float" />
@@ -75,15 +77,15 @@ function Home() {
             </span>
             The Future of Personal Finance
           </div>
-          
+
           <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-tight text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-400">
             Take control of your money, <span className="text-indigo-500">effortlessly.</span>
           </h1>
-          
+
           <p className="text-lg md:text-xl text-slate-400 leading-relaxed font-medium">
             Spent.io turns complex financial tracking into simple, actionable insights. Track expenses, manage recurring bills, and achieve your financial goals with intelligent automation.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <button onClick={() => navigate('/Signup')} className="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white text-base font-bold rounded-2xl shadow-xl shadow-indigo-500/20 transition-all transform hover:scale-105 flex items-center justify-center gap-2 cursor-pointer">
               Start Tracking for Free <ArrowRight size={18} />
@@ -96,7 +98,7 @@ function Home() {
 
         {/* --- WEB & MOBILE SCREENSHOT PLACEHOLDERS --- */}
         <div className="relative mx-auto max-w-5xl mt-32 z-10">
-          
+
           {/* Main Desktop Browser Mockup */}
           <div className="relative bg-slate-950 rounded-2xl border border-slate-800 aspect-video shadow-2xl flex flex-col overflow-hidden ring-1 ring-white/10 group">
             {/* Fake Browser Toolbar */}
@@ -105,7 +107,7 @@ function Home() {
               <div className="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
               <div className="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
             </div>
-            {/* Screenshot Area (Replace with your actual <img> tag) */}
+            <img src={Desktop} className="w-full h-auto" alt="desktop view" />
             <div className="flex-1 bg-slate-800/50 flex flex-col items-center justify-center group-hover:bg-slate-800/30 transition-colors">
               <Monitor size={48} className="text-slate-600 mb-4" />
               <p className="text-slate-400 font-medium">Desktop Dashboard Screenshot</p>
@@ -115,14 +117,14 @@ function Home() {
 
           {/* Overlapping Mobile Mockup */}
           <div className="hidden md:flex absolute -bottom-16 -right-12 bg-slate-950 rounded-[2.5rem] border-[6px] border-slate-800 w-72 h-[550px] shadow-2xl flex-col overflow-hidden ring-1 ring-black/50 z-20 group">
-             {/* Fake Phone Notch */}
-             <div className="absolute top-0 inset-x-0 h-6 bg-slate-800 rounded-b-xl w-32 mx-auto z-30"></div>
-             {/* Screenshot Area (Replace with your actual <img> tag) */}
-             <div className="flex-1 bg-slate-800/80 flex flex-col items-center justify-center group-hover:bg-slate-800/60 transition-colors pt-6">
+            {/* Fake Phone Notch */}
+            <div className="absolute top-0 inset-x-0 h-6 bg-slate-800 rounded-b-xl w-32 mx-auto z-30"></div>
+            <img src={Mobile} alt="mobile view" />
+            <div className="flex-1 bg-slate-800/80 flex flex-col items-center justify-center group-hover:bg-slate-800/60 transition-colors pt-6">
               <Smartphone size={40} className="text-slate-500 mb-4" />
               <p className="text-slate-300 font-medium text-center px-4">Mobile App View</p>
               <p className="text-[10px] text-slate-500 mt-2 text-center">9:16 Aspect Ratio</p>
-             </div>
+            </div>
           </div>
         </div>
       </div>
@@ -136,17 +138,17 @@ function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <FeatureCard 
+            <FeatureCard
               icon={<TrendingUp size={24} className="text-emerald-400" />}
               title="Smart Analytics"
               desc="Visualize your spending with beautiful pie charts, daily velocity graphs, and period-over-period comparisons."
             />
-            <FeatureCard 
+            <FeatureCard
               icon={<Wallet size={24} className="text-indigo-400" />}
               title="Budget Enforcement"
               desc="Set absolute monthly limits and category-specific budgets. We'll warn you before you overspend."
             />
-            <FeatureCard 
+            <FeatureCard
               icon={<ShieldCheck size={24} className="text-rose-400" />}
               title="Udhar (Friends) Ledger"
               desc="Never lose track of who owes who. Easily log split bills, borrowed cash, and net balances with peers."
@@ -162,16 +164,19 @@ function Home() {
           <p className="text-slate-400">A quick 60-second walkthrough of our core features.</p>
         </div>
 
-        {/* Video Placeholder (Replace with <video> or <iframe>) */}
-        <div className="relative aspect-video bg-slate-800 rounded-3xl border border-slate-700 shadow-2xl flex items-center justify-center cursor-pointer overflow-hidden group">
-          {/* Overlay to simulate video thumbnail */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent z-10"></div>
-          
-          <div className="relative z-20 bg-indigo-600/90 backdrop-blur-sm w-20 h-20 rounded-full flex items-center justify-center group-hover:scale-110 group-hover:bg-indigo-500 transition-all duration-300 shadow-xl shadow-indigo-500/30">
-            <PlayCircle size={40} className="text-white ml-1" />
-          </div>
-          
-          <p className="absolute bottom-8 left-8 z-20 text-white font-bold text-lg">Feature Walkthrough: Adding Transactions & Checking Budgets</p>
+        {/* RESPONSIVE VIDEO CONTAINER */}
+        <div className="relative aspect-video w-full bg-slate-800 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden group">
+
+          <iframe
+            className="absolute top-0 left-0 w-full h-full"
+            src="https://www.youtube.com/embed/RiNMAV9qFiQ"
+            title="Spent.io Demo"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+          ></iframe>
+
         </div>
       </div>
 
@@ -184,10 +189,13 @@ function Home() {
             Create Your Free Account
           </button>
         </div>
-        
+
         <div className="max-w-7xl mx-auto px-6 mt-32 border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
             <Wallet size={16} /> <span className="font-bold text-slate-400">Spent.io</span> © 2026
+          </div>
+          <div>
+            {"Made by Parshant :)"}
           </div>
           <div className="flex gap-6">
             <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>

@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Calendar, 
-  TrendingDown, 
+import {
+  Calendar,
+  TrendingDown,
   TrendingUp,
-  PieChart, 
-  Sparkles, 
+  PieChart,
+  Sparkles,
   ArrowRight,
   SlidersHorizontal,
   BarChart3,
   CalendarDays,
-  Loader2
 } from 'lucide-react';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import Loader from '../Layouts/Loader';
 function Analysis() {
-  // Navigation states
+  const [isLoading, setIsLoading] = useState(false);
   const [viewType, setViewType] = useState('month');
-  
+
   // Input tracking states
   const [selectedMonth, setSelectedMonth] = useState('2026-05');
   const [selectedYear, setSelectedYear] = useState('2026');
@@ -23,15 +23,14 @@ function Analysis() {
   const [customEnd, setCustomEnd] = useState('2026-05-31');
 
   // API Data States
-  const [isLoading, setIsLoading] = useState(true);
   const [metrics, setMetrics] = useState({
     currentTotal: 0,
     previousTotal: 0,
     topCategories: [],
     chartBuckets: [
-      { label: 'Week 1', amount: 0 }, 
-      { label: 'Week 2', amount: 0 }, 
-      { label: 'Week 3', amount: 0 }, 
+      { label: 'Week 1', amount: 0 },
+      { label: 'Week 2', amount: 0 },
+      { label: 'Week 3', amount: 0 },
       { label: 'Week 4', amount: 0 }
     ]
   });
@@ -51,7 +50,7 @@ function Analysis() {
       if (viewType === 'month') {
         const [year, month] = selectedMonth.split('-');
         start = new Date(year, month - 1, 1);
-        end = new Date(year, month, 0); 
+        end = new Date(year, month, 0);
         prevStart = new Date(year, month - 2, 1);
         prevEnd = new Date(year, month - 1, 0);
       } else if (viewType === 'year') {
@@ -63,7 +62,7 @@ function Analysis() {
         start = new Date(customStart);
         end = new Date(customEnd);
         const duration = end.getTime() - start.getTime();
-        prevEnd = new Date(start.getTime() - 86400000); 
+        prevEnd = new Date(start.getTime() - 86400000);
         prevStart = new Date(prevEnd.getTime() - duration);
       }
 
@@ -76,19 +75,19 @@ function Analysis() {
           }
         }
       );
-      
+
       if (!response.ok) throw new Error("Backend not connected yet");
-      
+
       const result = await response.json();
 
       if (result.success) {
         const buckets = [0, 0, 0, 0];
         const totalDuration = end.getTime() - start.getTime();
-        
+
         result.data.rawTransactions.forEach(txn => {
           const txnTime = new Date(txn.date).getTime();
           const progress = (txnTime - start.getTime()) / totalDuration;
-          
+
           if (progress < 0.25) buckets[0] += txn.amount;
           else if (progress < 0.50) buckets[1] += txn.amount;
           else if (progress < 0.75) buckets[2] += txn.amount;
@@ -137,9 +136,13 @@ function Analysis() {
   const topCategoriesSum = metrics.topCategories.reduce((acc, cat) => acc + cat.amount, 0);
   const topCategoriesPercentage = metrics.currentTotal > 0 ? ((topCategoriesSum / metrics.currentTotal) * 100).toFixed(0) : 0;
 
+  if (isLoading) {
+    return <Loader message="Calculating your budgets..." />;
+  }
+
   return (
     <div className="space-y-8 relative transition-colors duration-200">
-      
+
       {/* Loading Overlay */}
       {isLoading && (
         <div className="absolute inset-0 z-10 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-[1px] flex items-center justify-center rounded-3xl">
@@ -153,7 +156,7 @@ function Analysis() {
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Spending Analysis</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">See exactly where your money went during this time.</p>
         </div>
-        
+
         <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200/40 dark:border-slate-700/50 shadow-inner self-start sm:self-auto transition-colors duration-200">
           <button onClick={() => setViewType('month')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${viewType === 'month' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
             By Month
@@ -226,7 +229,7 @@ function Analysis() {
           <p className="text-4xl font-black text-slate-400 dark:text-slate-500 tracking-tight">₹{metrics.previousTotal.toLocaleString('en-IN')}</p>
           <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs font-medium text-slate-500 dark:text-slate-400">
             Difference: <span className={`${isSpendingDown ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'} font-bold`}>
-              {varianceAmount > 0 ? '+' : '-'} ₹{Math.abs(varianceAmount).toLocaleString('en-IN')} 
+              {varianceAmount > 0 ? '+' : '-'} ₹{Math.abs(varianceAmount).toLocaleString('en-IN')}
               ({varianceAmount > 0 ? '+' : ''}{variancePercentage.toFixed(1)}%)
             </span>
           </div>
@@ -235,7 +238,7 @@ function Analysis() {
 
       {/* CHARTS */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* TIMELINE CHART */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-sm lg:col-span-2 flex flex-col justify-between transition-colors duration-200">
           <div>
@@ -251,12 +254,12 @@ function Analysis() {
               {metrics.chartBuckets.map((bucket, idx) => {
                 const heightPercent = Math.max((bucket.amount / maxBucketAmount) * 100, 5);
                 return (
-                  <BarColumn 
+                  <BarColumn
                     key={idx}
-                    height={`${heightPercent}%`} 
-                    label={bucket.label} 
-                    amount={`₹${bucket.amount.toLocaleString('en-IN')}`} 
-                    active={bucket.amount === maxBucketAmount && bucket.amount > 0} 
+                    height={`${heightPercent}%`}
+                    label={bucket.label}
+                    amount={`₹${bucket.amount.toLocaleString('en-IN')}`}
+                    active={bucket.amount === maxBucketAmount && bucket.amount > 0}
                   />
                 )
               })}
@@ -278,12 +281,12 @@ function Analysis() {
               {metrics.topCategories.length > 0 ? metrics.topCategories.map((cat, idx) => {
                 const colors = ['bg-indigo-600', 'bg-amber-500', 'bg-rose-500'];
                 return (
-                  <LinearChartBar 
+                  <LinearChartBar
                     key={idx}
-                    label={cat.label} 
-                    amount={`₹${cat.amount.toLocaleString('en-IN')}`} 
-                    percentage={`${cat.percentage}%`} 
-                    color={colors[idx] || 'bg-slate-400 dark:bg-slate-600'} 
+                    label={cat.label}
+                    amount={`₹${cat.amount.toLocaleString('en-IN')}`}
+                    percentage={`${cat.percentage}%`}
+                    color={colors[idx] || 'bg-slate-400 dark:bg-slate-600'}
                   />
                 )
               }) : <p className="text-sm text-slate-400 dark:text-slate-500 text-center">No spending recorded yet.</p>}
@@ -308,7 +311,7 @@ const BarColumn = ({ height, label, amount, active }) => (
     <span className="text-[10px] font-bold bg-slate-900 dark:bg-slate-700 text-white px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 shadow-xs mb-1">
       {amount}
     </span>
-    <div 
+    <div
       style={{ height: height }}
       className={`w-full rounded-t-lg transition-all duration-300 transform group-hover:scale-x-105 
       ${active ? 'bg-indigo-600 dark:bg-indigo-500 shadow-[0_4px_12px_rgba(79,70,229,0.2)] dark:shadow-[0_4px_12px_rgba(99,102,241,0.2)]' : 'bg-slate-200/80 dark:bg-slate-700 group-hover:bg-slate-300 dark:group-hover:bg-slate-600'}`}

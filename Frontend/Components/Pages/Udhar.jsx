@@ -11,10 +11,12 @@ import {
   X
 } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
+import Loader from '../Layouts/Loader';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function Udhar() {
+  const [isLoading, setIsLoading] = useState(true);
   // Search and Filter States
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -43,6 +45,7 @@ function Udhar() {
   // 1. FETCH MASTER LIST: Runs once on mount, and whenever refreshTrigger updates
   useEffect(() => {
     const fetchAllUdharEntries = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch(`${BASE_URL}/udhars`, {
           method: 'GET',
@@ -60,6 +63,8 @@ function Udhar() {
       } catch (error) {
         console.error('Error fetching udhar entries:', error);
         toast.error('Failed to fetch udhar entries');
+      } finally{
+        setIsLoading(false);
       }
     };
     fetchAllUdharEntries();
@@ -86,8 +91,10 @@ function Udhar() {
   // Handle Form Submission
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     if (!formData.type) {
       toast.warning('Please select an Operation Mode (Lent or Borrowed).');
+      setIsLoading(false);
       return;
     }
 
@@ -96,7 +103,6 @@ function Udhar() {
       ...formData,
       amount: Number(formData.amount)
     };
-
     try {
       const response = await fetch(`${BASE_URL}/udhar`, {
         method: 'POST',
@@ -121,11 +127,14 @@ function Udhar() {
     } catch (error) {
       console.error('Error logging udhar entry:', error);
       toast.error('An error occurred while saving the udhar entry');
+    } finally{
+      setIsLoading(false);
     }
   };
 
   // Handle Deletion/Settlement
   const handleDelete = async (id) => {
+    setIsLoading(true);
     try {
       const response = await fetch(`${BASE_URL}/udhar/${id}`, {
         method: 'DELETE',
@@ -143,6 +152,8 @@ function Udhar() {
     } catch (error) {
       console.error('Error marking transaction as settled:', error);
       toast.error('An error occurred while marking the transaction as settled');
+    } finally{
+      setIsLoading(false);
     }
   };
 
@@ -168,6 +179,9 @@ function Udhar() {
 
     return `${day}/${month}/${year}`;
   };
+  if (isLoading) {
+    return <Loader message="Calculating your budgets..." />;
+  }
 
   return (
     <div className="space-y-8 transition-colors duration-200">

@@ -11,15 +11,20 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import Loader from '../Layouts/Loader';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import ConfirmModal from '../Layouts/Confirm';
 
 function BillsAndEMIs() {
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // --- STATE MANAGEMENT ---
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [subscriptions, setSubscriptions] = useState([]);
   const [loans, setLoans] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Modal States
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
@@ -34,7 +39,7 @@ function BillsAndEMIs() {
     try {
       const responseLoans = await fetch(`${BASE_URL}/loans`, {
         method: 'GET',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -44,7 +49,7 @@ function BillsAndEMIs() {
 
       const responseSubs = await fetch(`${BASE_URL}/subscriptions`, {
         method: 'GET',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -70,7 +75,7 @@ function BillsAndEMIs() {
     try {
       const response = await fetch(`${BASE_URL}/subscription`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
@@ -92,7 +97,7 @@ function BillsAndEMIs() {
     try {
       const response = await fetch(`${BASE_URL}/loan`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
@@ -110,30 +115,45 @@ function BillsAndEMIs() {
     }
   };
 
-  const handleDeletesubscription = async (id) => {
-    const response = await fetch(`${BASE_URL}/subscription/${id}`, {
-      method: 'DELETE',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+  const executeDelete = async () => {
+    if (!itemToDelete) return;
+    setIsDeleting(true);
+
+    try {
+      const { id, type } = itemToDelete;
+
+      // Dynamically select the endpoint based on the type
+      const endpoint = type === 'subscription' ? `/subscription/${id}` : `/loan/${id}`;
+
+      const response = await fetch(`${BASE_URL}${endpoint}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        toast.error(`Failed to delete ${type}.`);
+        return;
       }
-    });
-    if (response.ok) {
-      toast.success('Subscription deleted');
-      setSubscriptions(subscriptions.filter(s => s._id !== id));
-    }
-  };
-  const handleDeleteLoan = async (id) => {
-    const response = await fetch(`${BASE_URL}/loan/${id}`, {
-      method: 'DELETE',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+
+      // Update the correct UI array
+      if (type === 'subscription') {
+        setSubscriptions(prev => prev.filter(s => s._id !== id));
+        toast.success('Subscription deleted');
+      } else {
+        setLoans(prev => prev.filter(l => l._id !== id));
+        toast.success('Loan deleted');
       }
-    });
-    if (response.ok) {
-      toast.success('Loan deleted');
-      setLoans(loans.filter(l => l._id !== id));
+
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Network error.');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
     }
   };
 
@@ -142,8 +162,9 @@ function BillsAndEMIs() {
     loans.reduce((acc, c) => acc + Number(c.emiAmount || 0), 0);
 
   const totalOutstandingDebt = loans.reduce((acc, c) => acc + Number(c.remainingBalance || 0), 0);
-
-  if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-indigo-600 dark:text-indigo-400" size={32} /></div>;
+  if (isLoading) {
+    return <Loader message="Calculating your budgets..." />;
+  }
 
   return (
     <div className="space-y-8 relative transition-colors duration-200">
@@ -221,7 +242,10 @@ function BillsAndEMIs() {
                         {sub.billingCycle}
                       </span>
                     </div>
-                    <button onClick={() => handleDeletesubscription(sub._id)} className="p-1.5 bg-rose-50 dark:bg-rose-500/10 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 transition-opacity cursor-pointer">
+                    <button onClick={() => {
+                      setItemToDelete({ id: sub._id, type: 'subscription', name: sub.name });
+                      setIsDeleteModalOpen(true);
+                    }} className="p-1.5 bg-rose-50 dark:bg-rose-500/10 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 transition-opacity cursor-pointer">
                       <Trash2 size={16} />
                     </button>
                   </div>
@@ -260,7 +284,10 @@ function BillsAndEMIs() {
                     <div className="text-right">
                       <span className="text-xs text-slate-400 dark:text-slate-500 block font-medium">Monthly EMI</span>
                       <p className="text-base font-black text-indigo-600 dark:text-indigo-400">₹{Number(loan.emiAmount).toLocaleString('en-IN')}/mo</p>
-                      <button onClick={() => handleDeleteLoan(loan._id)} className="p-1 bg-rose-50 dark:bg-rose-500/10 rounded-sm hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 transition-opacity cursor-pointer">
+                      <button onClick={() => {
+                        setItemToDelete({ id: loan._id, type: 'loan', name: loan.name });
+                        setIsDeleteModalOpen(true);
+                      }} className="p-1 bg-rose-50 dark:bg-rose-500/10 rounded-sm hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 transition-opacity cursor-pointer">
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -356,7 +383,16 @@ function BillsAndEMIs() {
           </div>
         </div>
       )}
-
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        isLoading={isDeleting}
+        // Capitalize the first letter for the title
+        title={`Delete ${itemToDelete?.type === 'subscription' ? 'Subscription' : 'Loan'}?`}
+        message={`Are you sure you want to delete "${itemToDelete?.name}"? This action cannot be undone and will affect your monthly fixed outflow.`}
+        confirmText="Yes, Delete"
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={executeDelete} // Attach the unified function here
+      />
     </div>
   );
 }

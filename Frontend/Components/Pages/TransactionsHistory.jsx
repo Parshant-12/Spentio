@@ -2,16 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { Search, Filter, Trash2, Pencil, ArrowUpRight, ArrowDownLeft, RefreshCw, Download } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import Loader from '../Layouts/Loader';
+import ConfirmModal from '../Layouts/Confirm';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function Transactions() {
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [data, setData] = useState([]);
   const navigate = useNavigate();
 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch(`${BASE_URL}/transactions`, {
           method: 'GET',
@@ -25,9 +33,12 @@ function Transactions() {
         console.log(result);
       } catch (error) {
         console.error('Error fetching transaction data:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     const fetchFilteredData = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch(`${BASE_URL}/transactions/filter/${typeFilter}`, {
           method: 'GET',
@@ -40,6 +51,8 @@ function Transactions() {
         setData(result);
       } catch (error) {
         console.error('Error fetching filtered transaction data:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     if (typeFilter === 'all') {
@@ -71,9 +84,11 @@ function Transactions() {
     };
     searchData();
   }, [searchTerm]);
-  const handleDelete = async (id) => {
+  const handleDelete = async () => {
+    if (!itemToDelete) return; // Safeguard
+    setIsDeleting(true);
     try {
-      const response = await fetch(`${BASE_URL}/transaction/${id}`, {
+      const response = await fetch(`${BASE_URL}/transaction/${itemToDelete}`, {
         method: 'DELETE',
         headers: {
           'content-type': 'application/json',
@@ -83,11 +98,16 @@ function Transactions() {
       if (!response.ok) {
         toast.error('Failed to delete transaction. Please try again.');
       }
-      setData((prevData) => prevData.filter((data) => data._id !== id));
+      setData((prevData) => prevData.filter((data) => data._id !== itemToDelete));
       toast.success('Transaction deleted successfully.');
     } catch (error) {
       console.error('Error deleting transaction:', error);
       toast.error('Failed to delete transaction. Please try again.');
+    } finally {
+      // Clean up modal states regardless of success or failure
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
     }
   };
   const handleEdit = (id) => {
@@ -122,7 +142,9 @@ function Transactions() {
     // Cleanup
     window.URL.revokeObjectURL(url);
   };
-
+  if (isLoading) {
+    return <Loader message="Calculating your budgets..." />;
+  }
   return (
     <div className="space-y-6 transition-colors duration-200">
       {/* HEADER ACTION AREA */}
@@ -234,14 +256,19 @@ function Transactions() {
                   <td className="py-4 px-6">
                     <div className="flex items-center justify-center gap-1">
                       <button
-                        onClick={() => handleEdit(tx._id)}
+                        onClick={() => {
+                          handleEdit(tx._id)
+                        }}
                         className="p-2 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 rounded-lg hover:cursor-pointer transition-all duration-150"
                         title="Edit Entry"
                       >
                         <Pencil size={15} />
                       </button>
                       <button
-                        onClick={() => handleDelete(tx._id)}
+                        onClick={() => {
+                          setItemToDelete(tx._id);
+                          setIsDeleteModalOpen(true);
+                        }}
                         className="p-2 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded-lg hover:cursor-pointer transition-all duration-150"
                         title="Purge Entry"
                       >
@@ -281,8 +308,13 @@ function Transactions() {
                   {tx.type === 'income' ? '+' : '-'} ₹{tx.amount.toLocaleString('en-IN')}
                 </p>
                 <div className="flex justify-end gap-1 mt-1">
-                  <button onClick={() => handleEdit(tx._id)} className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-indigo-600 cursor-pointer"><Pencil size={14} /></button>
-                  <button onClick={() => handleDelete(tx._id)} className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-rose-600 cursor-pointer"><Trash2 size={14} /></button>
+                  <button onClick={() => {
+                    handleEdit(tx._id)
+                  }} className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-indigo-600 cursor-pointer"><Pencil size={14} /></button>
+                  <button onClick={() => {
+                    setItemToDelete(tx._id);
+                    setIsDeleteModalOpen(true);
+                  }} className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-rose-600 cursor-pointer"><Trash2 size={14} /></button>
                 </div>
               </div>
             </div>
@@ -290,6 +322,15 @@ function Transactions() {
         </div>
       </div>
       </div>
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        isLoading={isDeleting}
+        title="Delete Transaction?"
+        message={`Are you sure you want to delete this transaction? This action cannot be undone and will affect your budget calculations.`}
+        confirmText="Yes, Delete"
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

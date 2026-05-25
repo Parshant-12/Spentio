@@ -3,15 +3,17 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { PenTool, Camera, Sparkles, UploadCloud, Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import Loader from '../Layouts/Loader';
 
 function AddTransaction() {
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const [method, setMethod] = useState('manual'); // 'manual' or 'camera'
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
 
-  
+
   const editData = location.state?.editData;
   const [isEditMode, setIsEditMode] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -30,13 +32,13 @@ function AddTransaction() {
     if (editData) {
       setIsEditMode(true);
       setEditId(editData._id);
-      
+
       setFormData({
         amount: editData.amount,
         type: editData.type,
         category: editData.category || '',
         // Extract just the YYYY-MM-DD from the MongoDB timestamp
-        date: new Date(editData.date).toISOString().split('T')[0], 
+        date: new Date(editData.date).toISOString().split('T')[0],
         description: editData.description || '',
         fromAccount: editData.fromAccount || '',
         toAccount: editData.toAccount || ''
@@ -56,12 +58,13 @@ function AddTransaction() {
     }
   }, [formData.type, isEditMode]);
 
-const handleChange = (e) => {
+  const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       // Data cleanup before sending
       const payload = { ...formData };
@@ -71,23 +74,23 @@ const handleChange = (e) => {
       } else if (payload.type === 'transfer') {
         delete payload.category;
       }
-      
-      if(!payload.type) {
+
+      if (!payload.type) {
         toast.warning('Please select a transaction type.');
         return;
       }
 
       // 3. DYNAMIC URL AND METHOD
       // Tip: Double check your backend put route. It might be /transactions/:id instead of /transaction/:id
-      const url = isEditMode 
-        ? `${BASE_URL}/transaction/${editId}` 
+      const url = isEditMode
+        ? `${BASE_URL}/transaction/${editId}`
         : `${BASE_URL}/transactions`;
-      
+
       const httpMethod = isEditMode ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method: httpMethod,
-        headers: { 
+        headers: {
           'content-type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
@@ -96,10 +99,10 @@ const handleChange = (e) => {
 
       if (response.ok) {
         toast.success(isEditMode ? 'Transaction updated successfully!' : 'Transaction added successfully!');
-        
+
         // After editing, send them back to the ledger to see the update
         if (isEditMode) {
-          navigate('/TransactionsHistory'); 
+          navigate('/TransactionsHistory');
         } else {
           // If just adding, reset form for the next entry
           setFormData({
@@ -119,6 +122,8 @@ const handleChange = (e) => {
     catch (error) {
       console.error('Error saving transaction:', error);
       toast.error('Network error occurred.');
+    } finally{
+      setIsLoading(false);
     }
   }
 
@@ -133,7 +138,7 @@ const handleChange = (e) => {
       setFormData({
         amount: '450.00',
         type: 'expense',
-        category: 'food_groceries',
+        category: 'Food & Groceries',
         date: '2026-05-17',
         description: 'Starbucks Coffee & Sandwich (AI Scanned)',
         fromAccount: 'hdfc_bank',
@@ -145,6 +150,9 @@ const handleChange = (e) => {
       }, 1000);
     }, 2500);
   };
+  if (isLoading) {
+    return <Loader message="Calculating your budgets..." />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans antialiased md:p-10 transition-colors duration-200">
@@ -164,8 +172,8 @@ const handleChange = (e) => {
               {isEditMode ? 'Edit Transaction' : 'Add Transaction'}
             </h2>
             <p className="text-sm text-slate-400 dark:text-slate-500 mt-0.5">
-              {isEditMode 
-                ? 'Modify the parameters of this financial record.' 
+              {isEditMode
+                ? 'Modify the parameters of this financial record.'
                 : 'Choose an input paradigm to append records onto your financial ledger.'}
             </p>
           </div>
@@ -252,7 +260,7 @@ const handleChange = (e) => {
                             <option value="Bills & EMIs">Bills & EMIs</option>
                             <option value="Education & Skilling">Education & Skilling</option>
                             <option value="Travel & Cabs">Travel & Cabs</option>
-                            <option value="Shopping">Shopping</option> 
+                            <option value="Shopping">Shopping</option>
                             <option value="Rent & PG/Hostel">Rent & PG/Hostel</option>
                             <option value="Subscriptions & Entertainment">Subscriptions & Entertainment</option>
                             <option value="Investments & Savings">Investments & Savings</option>

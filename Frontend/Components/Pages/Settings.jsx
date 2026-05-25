@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
-import { User, Lock, Bell, Globe, Save, ShieldCheck } from 'lucide-react';
-import { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { User, Lock, Globe, Save, Loader2 } from 'lucide-react'; // Added Loader2
 import { toast } from 'react-toastify';
+import Loader from '../Layouts/Loader';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function Settings() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false); // NEW STATE for button protection
+  
   const [profile, setProfile] = useState({
     name: '',
     email: '',
@@ -14,6 +17,7 @@ function Settings() {
   });
 
   useEffect(() => {
+    setIsLoading(true);
     const dataFetch = async () => {
       try {
         const response = await fetch(`${BASE_URL}/settings`, {
@@ -26,7 +30,6 @@ function Settings() {
 
         const result = await response.json();
 
-        // Ensure you check 'result.success' and match the keys returned by your API
         if (result.success) {
           setProfile({
             name: result.data.name,
@@ -39,32 +42,63 @@ function Settings() {
       } catch (error) {
         console.error('Error fetching settings:', error);
         toast.error('Failed to fetch settings.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
     dataFetch();
   }, []);
 
-
   const handleSave = async (e) => {
     e.preventDefault();
+    
+    // Prevent double-clicking
+    if (isSaving) return;
+    setIsSaving(true);
+
     try {
+      // 1. Construct payload without password by default
+      const payload = {
+        name: profile.name,
+        email: profile.email,
+        currency: profile.currency,
+        notifications: profile.notifications
+      };
+
+      // 2. Only attach password if user typed something
+      if (profile.password && profile.password.trim() !== '') {
+        payload.password = profile.password;
+      }
+
       const response = await fetch(`${BASE_URL}/settings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(profile)
+        body: JSON.stringify(payload)
       });
-      if (response.ok){
+
+      if (response.ok) {
         toast.success('Settings saved successfully!');
+        // 3. Clear the password field from the UI after successful save
+        setProfile(prev => ({ ...prev, password: '' }));
+      } else {
+        const errData = await response.json();
+        toast.error(errData.message || 'Failed to save settings.');
       }
     } catch (error) {
       console.error('Error saving settings:', error);
-      toast.error('Failed to save settings.');
+      toast.error('Network error. Failed to save settings.');
+    } finally {
+      setIsSaving(false);
     }
   };
+
+  if (isLoading) {
+    return <Loader message="Fetching your configuration..." />;
+  }
 
   return (
     <div className="space-y-8 max-w-3xl transition-colors duration-200">
@@ -85,7 +119,7 @@ function Settings() {
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Display Name</label>
               <input
-                type="text" value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} placeholder={profile.name}
+                type="text" value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} placeholder="Your Name"
                 className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-all"
               />
             </div>
@@ -109,7 +143,7 @@ function Settings() {
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Primary Currency Standard</label>
               <select
                 value={profile.currency} onChange={(e) => setProfile({ ...profile, currency: e.target.value })}
-                className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-all"
+                className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-all cursor-pointer"
               >
                 <option value="INR">INR (₹) - Indian Rupee</option>
                 <option value="USD">USD ($) - US Dollar</option>
@@ -137,9 +171,18 @@ function Settings() {
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Update Account Password</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
+                Update Account Password
+              </label>
+              {/* Added helper text here */}
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2 font-medium">
+                Leave blank to keep your current password.
+              </p>
               <input
-                type="password" placeholder="••••••••••••" onChange={(e)=> setProfile({...profile, password: e.target.value})}
+                type="password" 
+                value={profile.password} /* Binding value so it clears properly */
+                placeholder="••••••••••••" 
+                onChange={(e) => setProfile({ ...profile, password: e.target.value })}
                 className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-all"
               />
             </div>
@@ -149,9 +192,20 @@ function Settings() {
         {/* SAVE EXECUTION BUTTON */}
         <button
           type="submit"
-          className="flex items-center justify-center gap-2 bg-indigo-600 dark:bg-indigo-500 px-6 py-3 rounded-xl text-white font-bold text-sm shadow-sm hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all ml-auto cursor-pointer"
+          disabled={isSaving}
+          className="flex items-center justify-center gap-2 bg-indigo-600 dark:bg-indigo-500 px-6 py-3 rounded-xl text-white font-bold text-sm shadow-sm hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all ml-auto cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 dark:disabled:hover:bg-indigo-500"
         >
-          <Save size={16} /> Save
+          {isSaving ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save size={16} /> 
+              Save Configuration
+            </>
+          )}
         </button>
 
       </form>

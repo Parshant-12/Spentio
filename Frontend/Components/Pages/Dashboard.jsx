@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  PlusCircle, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  Wallet, 
+import {
+  PlusCircle,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Wallet,
   TrendingUp,
-  TrendingDown, 
-  ShoppingBag, 
-  Utensils, 
-  Car, 
+  TrendingDown,
+  ShoppingBag,
+  Utensils,
+  Car,
   Layers,
-  Loader2,
   Receipt
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import Loader from '../Layouts/Loader';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function Dashboard() {
@@ -38,7 +38,7 @@ function Dashboard() {
         });
 
         if (!response.ok) throw new Error("Failed to fetch");
-        
+
         const data = await response.json();
         setTransactions(data);
       } catch (error) {
@@ -75,10 +75,10 @@ function Dashboard() {
   // Lifetime balance (All time income - All time expense)
   const totalBalance = transactions
     .filter(tx => tx.type === 'income')
-    .reduce((sum, tx) => sum + tx.amount, 0) - 
+    .reduce((sum, tx) => sum + tx.amount, 0) -
     transactions
-    .filter(tx => tx.type === 'expense')
-    .reduce((sum, tx) => sum + tx.amount, 0);
+      .filter(tx => tx.type === 'expense')
+      .reduce((sum, tx) => sum + tx.amount, 0);
 
   // 3. Daily Velocity (Today vs Yesterday)
   const todayString = now.toISOString().split('T')[0];
@@ -107,23 +107,19 @@ function Dashboard() {
     .slice(0, 4);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <Loader2 className="w-10 h-10 text-indigo-600 dark:text-indigo-400 animate-spin" />
-      </div>
-    );
+    return <Loader message="Calculating your budgets..." />;
   }
 
   return (
     <div className="space-y-8 transition-colors duration-200">
-      
+
       {/* HEADER SECTION */}
       <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Overview</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Your money at a glance.</p>
         </div>
-        <button 
+        <button
           onClick={() => navigate('/AddTransaction')}
           className="flex items-center justify-center gap-2 bg-indigo-600 dark:bg-indigo-500 px-4 py-2.5 rounded-xl text-white font-medium text-sm shadow-sm hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all duration-200 cursor-pointer"
         >
@@ -133,14 +129,14 @@ function Dashboard() {
 
       {/* CORE METRICS GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <StatCard title="Total Available Balance" value="All-time" amount={`₹${totalBalance.toLocaleString('en-IN')}`} icon={<Wallet size={20}/>} trendColor="text-indigo-600 dark:text-indigo-400" bgCircle="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" />
-        <StatCard title="Total Income" value="This Month" amount={`₹${totalIncome.toLocaleString('en-IN')}`} icon={<ArrowUpRight size={20}/>} trendColor="text-emerald-600 dark:text-emerald-400" bgCircle="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" />
-        <StatCard title="Total Expenses" value="This Month" amount={`₹${totalExpense.toLocaleString('en-IN')}`} icon={<ArrowDownLeft size={20}/>} trendColor="text-rose-600 dark:text-rose-400" bgCircle="bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400" />
+        <StatCard title="Total Available Balance" value="All-time" amount={`₹${totalBalance.toLocaleString('en-IN')}`} icon={<Wallet size={20} />} trendColor="text-indigo-600 dark:text-indigo-400" bgCircle="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" />
+        <StatCard title="Total Income" value="This Month" amount={`₹${totalIncome.toLocaleString('en-IN')}`} icon={<ArrowUpRight size={20} />} trendColor="text-emerald-600 dark:text-emerald-400" bgCircle="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" />
+        <StatCard title="Total Expenses" value="This Month" amount={`₹${totalExpense.toLocaleString('en-IN')}`} icon={<ArrowDownLeft size={20} />} trendColor="text-rose-600 dark:text-rose-400" bgCircle="bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400" />
       </div>
 
       {/* SECONDARY ROW GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* DAILY SPENDING COMPARE */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-sm flex flex-col justify-between transition-colors duration-200">
           <div>
@@ -162,8 +158,8 @@ function Dashboard() {
           <div className={`mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 text-xs font-medium ${isSpendingUp ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
             {isSpendingUp ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
             <span>
-              {isSpendingUp 
-                ? `You have spent ₹${Math.abs(dailyDifference).toLocaleString('en-IN')} more than yesterday.` 
+              {isSpendingUp
+                ? `You have spent ₹${Math.abs(dailyDifference).toLocaleString('en-IN')} more than yesterday.`
                 : `You have spent ₹${Math.abs(dailyDifference).toLocaleString('en-IN')} less than yesterday.`}
             </span>
           </div>
@@ -185,8 +181,8 @@ function Dashboard() {
             </div>
           </div>
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-4">
-            {remainingBudget > 0 
-              ? `Safe to spend: ₹${remainingBudget.toLocaleString('en-IN')} remaining.` 
+            {remainingBudget > 0
+              ? `Safe to spend: ₹${remainingBudget.toLocaleString('en-IN')} remaining.`
               : `Budget exceeded by ₹${Math.abs(remainingBudget).toLocaleString('en-IN')}.`}
           </p>
         </div>
@@ -198,7 +194,7 @@ function Dashboard() {
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">View your full analysis.</p>
             <div className="h-28 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-xs text-slate-400 dark:text-slate-500 font-medium p-4 text-center">
               Want to see exactly where your money goes? Check the Analysis tab for pie charts and timelines.
-              <button 
+              <button
                 onClick={() => navigate('/Analysis')}
                 className="mt-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-4 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
               >
@@ -221,8 +217,8 @@ function Dashboard() {
             <h3 className="font-bold text-slate-900 dark:text-white text-base">Recent Transactions</h3>
             <p className="text-xs text-slate-400 dark:text-slate-500">Your latest activity.</p>
           </div>
-          <button 
-            onClick={() => navigate('/TransactionsHistory')} 
+          <button
+            onClick={() => navigate('/TransactionsHistory')}
             className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline cursor-pointer transition-colors"
           >
             View All
@@ -231,14 +227,14 @@ function Dashboard() {
         <div className="divide-y divide-slate-100 dark:divide-slate-800">
           {recentTransactions.length > 0 ? (
             recentTransactions.map(tx => (
-              <TransactionRowItem 
+              <TransactionRowItem
                 key={tx._id}
-                icon={<Receipt size={16}/>} 
-                label={tx.description || tx.category} 
-                subtitle={tx.category} 
-                date={new Date(tx.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })} 
-                amount={`${tx.type === 'income' ? '+' : '-'} ₹${tx.amount.toLocaleString('en-IN')}`} 
-                type={tx.type} 
+                icon={<Receipt size={16} />}
+                label={tx.description || tx.category}
+                subtitle={tx.category}
+                date={new Date(tx.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
+                amount={`${tx.type === 'income' ? '+' : '-'} ₹${tx.amount.toLocaleString('en-IN')}`}
+                type={tx.type}
               />
             ))
           ) : (

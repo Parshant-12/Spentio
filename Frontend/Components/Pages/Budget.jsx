@@ -12,12 +12,18 @@ import {
 } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import { useEffect } from 'react';
+import Loader from '../Layouts/Loader';
+import ConfirmModal from '../Layouts/Confirm';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 function Budget() {
-  // --- STATE MANAGEMENT ---
+  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState('category'); // 'global' or 'category'
   const [triggerRefresh, setTriggerRefresh] = useState(0);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [budgetForm, setBudgetForm] = useState({
     category: 'Food & Groceries',
@@ -33,6 +39,7 @@ function Budget() {
     amount: 0
   }]);
   useEffect(() => {
+    setIsLoading(true);
     const fetchBudgetSummary = async () => {
       try {
         const response = await fetch(`${BASE_URL}/budgets/summary`, {
@@ -49,11 +56,14 @@ function Budget() {
         setBudgets(data);
       } catch (err) {
         toast.error('Server error.');
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchBudgetSummary();
 
     const fetchUntrackedBudget = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch(`${BASE_URL}/budgets/untracked`, {
           method: 'GET',
@@ -70,11 +80,14 @@ function Budget() {
       } catch (error) {
         console.error("Fetch error:", error);
         toast.error('Server error.');
+      } finally {
+        setIsLoading(false);
       }
     }
     fetchUntrackedBudget();
 
     const fetchGlobalLimit = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch(`${BASE_URL}/budget/global`, {
           method: 'GET',
@@ -91,6 +104,8 @@ function Budget() {
       } catch (error) {
         console.error("Fetch error:", error);
         toast.error('Server error.');
+      } finally {
+        setIsLoading(false);
       }
     }
     fetchGlobalLimit();
@@ -101,9 +116,12 @@ function Budget() {
       spent: 0
     },
   ]);
-  const handleDeleteCategory = async (categoryToDelete) => {
+  const handleDeleteCategory = async () => {
+    setIsLoading(true);
+    if (!itemToDelete) return; // Safeguard
+    setIsDeleting(true);
     try {
-      const response = await fetch(`${BASE_URL}/budget/track/${categoryToDelete}`, {
+      const response = await fetch(`${BASE_URL}/budget/track/${itemToDelete}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -114,12 +132,17 @@ function Budget() {
         toast.error('Failed to delete category limit. Please try again.');
         return;
       }
-      toast.success(`Deleted limit for category: ${categoryToDelete}`);
+      toast.success(`Deleted limit for category: ${itemToDelete}`);
     } catch (error) {
       console.error("Fetch error:", error);
       toast.error('Network error. Is the server running?');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+      setIsLoading(false);
     }
-    setBudgets(prevBudgets => prevBudgets.filter(b => b.category !== categoryToDelete));
+    setBudgets(prevBudgets => prevBudgets.filter(b => b.category !== itemToDelete));
     setTriggerRefresh((prev) => prev + 1);
   };
 
@@ -135,7 +158,7 @@ function Budget() {
     setBudgetForm({ ...budgetForm, [e.target.id]: e.target.value });
   };
 
-  const openModal = (type, defaultCategory = 'food_groceries') => {
+  const openModal = (type, defaultCategory = 'Food & Groceries') => {
     setModalType(type);
     setBudgetForm({ ...budgetForm, category: defaultCategory, limitAmount: type === 'global' ? globalLimit : '' });
     setIsModalOpen(true);
@@ -143,13 +166,13 @@ function Budget() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-
+    setIsLoading(true);
     if (modalType === 'global') {
       try {
         // 1. Added the full localhost URL so it hits Express
         const response = await fetch(`${BASE_URL}/budget`, {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           },
@@ -172,7 +195,7 @@ function Budget() {
     } else {
       const response = await fetch(`${BASE_URL}/budget/track`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
@@ -188,42 +211,47 @@ function Budget() {
       }
       toast.success(`Saved: ${budgetForm.category} at ₹${budgetForm.limitAmount}`);
     }
-    setBudgetForm({ category: 'food_groceries', limitAmount: '' });
+    setIsLoading(false);
+    setBudgetForm({ category: 'Food & Groceries', limitAmount: '' });
     setIsModalOpen(false);
     setTriggerRefresh((prev) => prev + 1);
   };
+  if (isLoading) {
+    return <Loader message="Calculating your budgets..." />;
+  }
 
   return (
     <div className="relative space-y-6 max-w-4xl mx-auto pb-10 transition-colors duration-200">
 
       {/* 1. HEADER SECTION */}
-      <header className="flex items-center justify-between">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Monthly Budget</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Track and enforce your spending limits</p>
         </div>
         <button
           onClick={() => openModal('category')}
-          className="flex items-center gap-2 cursor-pointer bg-indigo-600 dark:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors shadow-sm"
+          // Added w-full and justify-center for mobile, sm:w-auto for desktop
+          className="flex items-center justify-center gap-2 cursor-pointer bg-indigo-600 dark:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors shadow-sm w-full sm:w-auto"
         >
           <Plus size={16} /> Add / Edit Category Limit
         </button>
       </header>
 
       {/* 2. GLOBAL MONTHLY CEILING CARD */}
-      {/* 2. GLOBAL MONTHLY CEILING CARD */}
       <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-sm space-y-4 transition-colors duration-200">
         <div className="flex justify-between items-start">
           <div>
 
             {/* --- MODIFIED HEADER WITH VISIBLE EDIT BUTTON --- */}
-            <div className="flex items-center gap-3 mb-1">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1">
               <span className="text-[11px] font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">
                 Absolute Monthly Limit
               </span>
               <button
                 onClick={() => openModal('global')}
-                className="flex items-center gap-1 px-2 py-0.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-500/20 hover:text-indigo-700 dark:hover:text-indigo-300 rounded-md transition-colors border border-indigo-100 dark:border-indigo-500/20 shadow-sm"
+                // Increased mobile padding (px-2.5 py-1) and kept it tight on desktop (sm:px-2 sm:py-0.5)
+                className="flex items-center gap-1 px-5.5 md:px-2.5 py-1 sm:px-2 sm:py-0.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-500/20 hover:text-indigo-700 dark:hover:text-indigo-300 rounded-md transition-colors border border-indigo-100 dark:border-indigo-500/20 shadow-sm shrink-0"
                 title="Edit Total Limit"
               >
                 <Pencil size={12} strokeWidth={2.5} />
@@ -296,7 +324,10 @@ function Budget() {
                   {/* --- MODIFIED SECTION: Action Buttons Container --- */}
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleDeleteCategory(budget.category)}
+                      onClick={() => {
+                        setItemToDelete(budget.category);
+                        setIsDeleteModalOpen(true);
+                      }}
                       className="p-1.5 text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded-lg transition-all cursor-pointer"
                       title="Delete Limit"
                     >
@@ -393,7 +424,7 @@ function Budget() {
                       <option value="Subscriptions & Entertainment">Subscriptions & Entertainment</option>
                       <option value="Investments & Savings">Investments & Savings</option>
                       <option value="Pharmacy & Medical">Medical</option>
-                      <option value="Others">Others</option> 
+                      <option value="Others">Others</option>
                     </select>
                   </div>
                 )}
@@ -420,7 +451,15 @@ function Budget() {
           </div>
         </div>
       )}
-
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        isLoading={isDeleting}
+        title="Delete Transaction?"
+        message={`Are you sure you want to delete this Budget? This action cannot be undone.`}
+        confirmText="Yes, Delete"
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteCategory}
+      />
     </div>
   );
 }

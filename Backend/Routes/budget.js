@@ -86,7 +86,7 @@ router.get('/budgets/untracked', async (req, res) => {
         const budgetLimits = await Budget.find({ user: req.user.id });
 
         const untrackedSpending = spentData.filter(spentItem => {
-            const hasBudget = budgetLimits.some(budget => budget.category.toLowerCase === spentItem._id.toLowerCase);
+            const hasBudget = budgetLimits.some(budget => budget.category.toLowerCase() === spentItem._id.toLowerCase());
             return !hasBudget; 
         });
 
@@ -121,7 +121,7 @@ router.get('/budgets/summary', async (req, res) => {
 
         // STEP 4: Merge the Data
         const formattedBudgets = budgetLimits.map(budget => {
-            const matchedSpent = spentData.find(item => item._id.toLowerCase() === budget.category.toLowerCase);
+            const matchedSpent = spentData.find(item => item._id.toLowerCase() === budget.category.toLowerCase());
 
             return {
                 category: budget.category,
