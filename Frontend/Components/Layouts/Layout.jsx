@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { ToastContainer, toast, Bounce } from 'react-toastify';
+import InstallGuide from '../Layouts/smart_banner';
 import {
   LayoutDashboard,
   Receipt,
@@ -222,6 +223,7 @@ function Layout() {
         onConfirm={handleLogout}
       />
       <Analytics />
+      <InstallGuide />
     </div>
   );
 }
