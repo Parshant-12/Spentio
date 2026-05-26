@@ -60,7 +60,7 @@ function InstallPWAButton() {
       >
         <div className="flex items-center gap-3">
           <Smartphone size={18} className="text-amber-500 group-hover:scale-110 transition-transform" />
-          <span>Get Desktop App</span>
+          <span>Install App</span>
         </div>
         <span className="bg-amber-500 dark:bg-amber-400 text-white dark:text-slate-950 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md tracking-wider shadow-xs">Free</span>
       </button>
