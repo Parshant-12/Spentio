@@ -136,4 +136,43 @@ router.get('/budgets/summary', async (req, res) => {
     }
 });
 
+router.get('/budgets/track/:category', async (req, res) => {
+    try {
+        const { category } = req.params;
+        const budget = await Budget.findOne({ user:req.user.id , category });
+        
+        if (!budget) {
+            return res.status(404).json({ message: "No budget set for this category." });
+        }
+
+        const totalSpentData = await Transaction.aggregate([
+            {
+                $match: {
+                    user: new mongoose.Types.ObjectId(req.user.id),
+                    category: category,
+                    type: 'expense'
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: "$amount" }
+                }
+            }
+        ]);
+
+        const totalSpent = totalSpentData.length > 0 ? totalSpentData[0].total : 0;
+
+        return res.status(200).json({
+            category,
+            limit: budget.amount,
+            spent: totalSpent,
+        });
+
+    } catch (err) {
+        console.error("Budget Tracking Error:", err);
+        return res.status(500).json({ error: "Failed to track budget due to a server error." });
+  }
+});
+
 module.exports = router;

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 import Loader from '../Layouts/Loader';
+import { toast } from 'react-toastify';
 function Analysis() {
   const [isLoading, setIsLoading] = useState(false);
   const [viewType, setViewType] = useState('month');
@@ -107,22 +108,7 @@ function Analysis() {
         });
       }
     } catch (error) {
-      console.warn("Using fallback data for UI testing:", error.message);
-      setMetrics({
-        currentTotal: 39769,
-        previousTotal: 48312,
-        topCategories: [
-          { label: "Rent & PG/Hostel", amount: 15000, percentage: 37.7 },
-          { label: "Food & Groceries", amount: 12450, percentage: 31.3 },
-          { label: "Shopping", amount: 6820, percentage: 17.1 }
-        ],
-        chartBuckets: [
-          { label: 'Week 1', amount: 8920 },
-          { label: 'Week 2', amount: 16400 },
-          { label: 'Week 3', amount: 10120 },
-          { label: 'Week 4', amount: 4329 }
-        ]
-      });
+      toast.warning("Invalid Date!")
     } finally {
       setIsLoading(false);
     }

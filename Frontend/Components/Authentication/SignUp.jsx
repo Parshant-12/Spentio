@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ToastContainer, toast, Bounce } from 'react-toastify';
-import { 
-    User, 
-    Mail, 
-    Lock, 
-    UserPlus, 
-    ArrowRight, 
+import {
+    User,
+    Mail,
+    Lock,
+    UserPlus,
+    ArrowRight,
     Loader2,
     Wallet,
     Coins,
@@ -33,6 +33,10 @@ function Signup() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
+        if (!validateEmail(formData.email)) {
+            toast.error("Please enter a structurally valid email address.");
+            return;
+        }
 
         try {
             const response = await fetch(`${BASE_URL}/signup`, {
@@ -65,9 +69,15 @@ function Signup() {
         }
     };
 
+    const validateEmail = (email) => {
+        // Standard RFC 5322 compliant regex for email validation
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return emailRegex.test(email);
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-900 text-slate-50 font-sans p-4 relative overflow-hidden selection:bg-indigo-500/30">
-            
+
             {/* INLINE STYLES FOR BACKGROUND ANIMATIONS (Matching Home.jsx) */}
             <style>
                 {`
@@ -91,7 +101,7 @@ function Signup() {
                 <Coins size={120} className="absolute bottom-[15%] right-[10%] text-amber-500/10 animate-float-delayed" />
                 <PieChart size={90} className="absolute top-[20%] right-[20%] text-rose-500/10 animate-float-slow" />
                 <Wallet size={100} className="absolute bottom-[20%] left-[10%] text-indigo-500/10 animate-float" />
-                
+
                 {/* Subtle ambient gradients */}
                 <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-indigo-600/10 rounded-full blur-[100px]"></div>
                 <div className="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-emerald-600/10 rounded-full blur-[100px]"></div>
@@ -169,13 +179,14 @@ function Signup() {
                     {/* Password Input */}
                     <div>
                         <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 pl-1">
-                            Password
+                            Create Password
                         </label>
                         <div className="relative group">
                             <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" size={18} />
                             <input
                                 type="password"
                                 id="password"
+                                minLength={12}
                                 required
                                 value={formData.password}
                                 onChange={handleChange}

@@ -15,36 +15,19 @@ function AddTransaction() {
 
 
   const editData = location.state?.editData;
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editId, setEditId] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(!!editData);
+  const [editId, setEditId] = useState(editData?._id || null);
 
   // Form State - Upgraded with transfer fields
   const [formData, setFormData] = useState({
-    amount: '',
-    type: 'expense', // 'expense' | 'income' | 'transfer'
-    category: '',
-    date: new Date().toISOString().split('T')[0],
-    description: '',
-    fromAccount: '',
-    toAccount: ''
+    amount: editData?.amount || '',
+    type: editData?.type || 'expense',
+    category: editData?.category || '',
+    date: editData?.date ? new Date(editData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    description: editData?.description || '',
+    fromAccount: editData?.fromAccount || '',
+    toAccount: editData?.toAccount || ''
   });
-  useEffect(() => {
-    if (editData) {
-      setIsEditMode(true);
-      setEditId(editData._id);
-
-      setFormData({
-        amount: editData.amount,
-        type: editData.type,
-        category: editData.category || '',
-        // Extract just the YYYY-MM-DD from the MongoDB timestamp
-        date: new Date(editData.date).toISOString().split('T')[0],
-        description: editData.description || '',
-        fromAccount: editData.fromAccount || '',
-        toAccount: editData.toAccount || ''
-      });
-    }
-  }, [editData]);
 
   // Automatically reset category/accounts to safe defaults when transaction type shifts
   useEffect(() => {
@@ -62,69 +45,97 @@ function AddTransaction() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      // Data cleanup before sending
-      const payload = { ...formData };
-      if (payload.type !== 'transfer') {
-        delete payload.fromAccount;
-        delete payload.toAccount;
-      } else if (payload.type === 'transfer') {
-        delete payload.category;
-      }
+  e.preventDefault();
+  setIsLoading(true);
+  try {
+    // 1. Data cleanup before sending
+    const payload = { ...formData };
+    if (payload.type !== 'transfer') {
+      delete payload.fromAccount;
+      delete payload.toAccount;
+    } else if (payload.type === 'transfer') {
+      delete payload.category;
+    }
 
-      if (!payload.type) {
-        toast.warning('Please select a transaction type.');
-        return;
-      }
+    if (!payload.type) {
+      toast.warning('Please select a transaction type.');
+      return;
+    }
 
-      // 3. DYNAMIC URL AND METHOD
-      // Tip: Double check your backend put route. It might be /transactions/:id instead of /transaction/:id
-      const url = isEditMode
-        ? `${BASE_URL}/transaction/${editId}`
-        : `${BASE_URL}/transactions`;
+    const url = isEditMode
+      ? `${BASE_URL}/transaction/${editId}`
+      : `${BASE_URL}/transactions`;
 
-      const httpMethod = isEditMode ? 'PUT' : 'POST';
+    const httpMethod = isEditMode ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method: httpMethod,
-        headers: {
-          'content-type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(payload)
-      });
+    const response = await fetch(url, {
+      method: httpMethod,
+      headers: {
+        'content-type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(payload)
+    });
 
-      if (response.ok) {
-        toast.success(isEditMode ? 'Transaction updated successfully!' : 'Transaction added successfully!');
-
-        // After editing, send them back to the ledger to see the update
-        if (isEditMode) {
-          navigate('/TransactionsHistory');
-        } else {
-          // If just adding, reset form for the next entry
-          setFormData({
-            amount: '',
-            type: '',
-            category: '',
-            date: new Date().toISOString().split('T')[0],
-            description: '',
-            fromAccount: '',
-            toAccount: ''
+    // 3. Handle Success & Budget Checking
+    if (response.ok) {
+      toast.success(isEditMode ? 'Transaction updated successfully!' : 'Transaction added successfully!');
+      if (payload.type === 'expense' && payload.category) {
+        try {
+          // Note: Safely encode the category string to handle spaces/ampersands (e.g. "Food & Groceries")
+          const safeCategory = encodeURIComponent(payload.category);
+          
+          const budgetResponse = await fetch(`${BASE_URL}/budgets/track/${safeCategory}`, {
+            method: 'GET',
+            headers: {
+              'content-type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
           });
+
+          if (budgetResponse.ok) {
+            const budgetData = await budgetResponse.json();
+            
+            // Calculate percentage. The backend 'spent' ALREADY includes the transaction we just added!
+            const percentage = (budgetData.spent / budgetData.limit) * 100;
+
+            // VERY IMPORTANT: Check the highest condition (100) BEFORE checking the lower condition (80)
+            if (percentage >= 100) {
+              toast.error(`Budget Exceeded! You are over your ₹${budgetData.limit} limit.`);
+            } else if (percentage >= 80) {
+              toast.warning(`Heads up! You have used ${percentage.toFixed(0)}% of your budget.`);
+            }
+          }
+        } catch (budgetError) {
+          console.error("Failed to fetch budget for notifications:", budgetError);
+          // We silently catch this error so it doesn't break the UI if the budget check fails
         }
-      } else {
-        toast.error(`Failed to ${isEditMode ? 'update' : 'add'} transaction.`);
       }
+
+      if (isEditMode) {
+        navigate('/TransactionsHistory');
+      } else {
+        // Tip: Reset type to 'expense' instead of '' so the form dropdown doesn't break!
+        setFormData({
+          amount: '',
+          type: 'expense', 
+          category: 'Food & Groceries',
+          date: new Date().toISOString().split('T')[0],
+          description: '',
+          fromAccount: '',
+          toAccount: ''
+        });
+      }
+    } else {
+      toast.error(`Failed to ${isEditMode ? 'update' : 'add'} transaction.`);
     }
-    catch (error) {
-      console.error('Error saving transaction:', error);
-      toast.error('Network error occurred.');
-    } finally{
-      setIsLoading(false);
-    }
+  } catch (error) {
+    console.error('Error saving transaction:', error);
+    toast.error('Network error occurred.');
+  } finally {
+    setIsLoading(false);
   }
+}
 
   // Mock AI OCR Camera Scanner Engine
   const handleSimulateScan = () => {
@@ -234,6 +245,7 @@ function AddTransaction() {
                 <label htmlFor="amount" className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Absolute Magnitude (INR)</label>
                 <input
                   onWheel={(e) => e.target.blur()}
+                  min={0}
                   type="number" id="amount" placeholder="₹ 0.00" value={formData.amount} onChange={handleChange} required
                   className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-700 text-slate-900 dark:text-white transition-all font-semibold placeholder-slate-400 dark:placeholder-slate-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
@@ -309,13 +321,15 @@ function AddTransaction() {
               </div>
 
               {/* DESCRIPTION TEXT BLOCK */}
-              <div>
-                <label htmlFor="description" className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Descriptor Scope</label>
-                <input
-                  type="text" id="description" placeholder={formData.type === 'transfer' ? 'e.g., Transferring money to buy stocks' : 'e.g., Grocery store payload'} value={formData.description} onChange={handleChange} required
-                  className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-700 text-slate-900 dark:text-white transition-all placeholder-slate-400 dark:placeholder-slate-500"
-                />
-              </div>
+              {formData.type !== 'income' && (
+                <div>
+                  <label htmlFor="description" className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Descriptor Scope</label>
+                  <input
+                    type="text" id="description" placeholder={formData.type === 'transfer' ? 'e.g., Transferring money to buy stocks' : 'e.g., Grocery store payload'} value={formData.description} onChange={handleChange} required
+                    className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-700 text-slate-900 dark:text-white transition-all placeholder-slate-400 dark:placeholder-slate-500"
+                  />
+                </div>
+              )}
 
               <button type="submit" className="w-full cursor-pointer py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-semibold rounded-xl text-sm hover:bg-indigo-800 dark:hover:bg-indigo-600 shadow-sm transition-all mt-4">
                 {isEditMode ? 'Update Transaction' : 'Save Transaction'}

@@ -434,6 +434,7 @@ function Budget() {
                     {modalType === 'global' ? 'Absolute Maximum (₹)' : 'Monthly Limit (₹)'}
                   </label>
                   <input
+                    min={1}
                     onWheel={(e)=>e.target.blur()}
                     type="number" id="limitAmount" placeholder="e.g. 50000" required
                     value={budgetForm.limitAmount} onChange={handleInputChange}

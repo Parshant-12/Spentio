@@ -372,6 +372,7 @@ function Udhar() {
                   Absolute Amount (INR)
                 </label>
                 <input
+                  min={0}
                   onWheel={(e) => e.target.blur()}
                   type="number" id="amount" placeholder="₹ 0.00" required
                   value={formData.amount} onChange={handleInputChange}
