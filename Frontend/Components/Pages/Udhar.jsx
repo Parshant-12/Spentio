@@ -141,7 +141,7 @@ function Udhar() {
   const handleDelete = async (id) => {
     setIsDeleting(true);
     try {
-      const response = await fetch(`${BASE_URL}/udhar/${id}`, {
+      const response = await fetch(`${BASE_URL}/udhar/${itemToDelete}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
