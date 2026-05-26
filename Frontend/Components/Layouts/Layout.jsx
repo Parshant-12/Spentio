@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { ToastContainer, toast, Bounce } from 'react-toastify';
-import { Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Receipt,
@@ -18,15 +17,17 @@ import {
   Menu,
   X
 } from 'lucide-react';
+
+// Adjust these import paths if your files are in different folders
 import ConfirmModal from '../Layouts/Confirm';
 import ThemeToggle from './ThemeToggle';
+import InstallPWAButton from '../Layouts/install_button';
 
 function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Helper utility to safely route and close mobile drawer simultaneously
@@ -69,19 +70,22 @@ function Layout() {
       </header>
 
       {/* MOBILE SLIDE-OUT DRAWER OVERLAY (RIGHT-ALIGNED) */}
-      <div className={`fixed inset-0 z-50 md:hidden transition-opacity duration-300 ${isMobileMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>        {/* Dark Backdrop Mask Layer */}
+      <div className={`fixed inset-0 z-50 md:hidden transition-opacity duration-300 ${isMobileMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+        {/* Dark Backdrop Mask Layer */}
         <div
           className={`fixed inset-0 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-xs transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0'}`}
           onClick={() => setIsMobileMenuOpen(false)}
         />
 
-        {/* Sliding Sidebar Body (Anchored right-0 and toggles translate-x) */}
+        {/* Sliding Sidebar Body */}
         <aside className={`fixed inset-y-0 right-0 w-64 bg-white dark:bg-slate-900 p-5 flex flex-col justify-between h-full shadow-2xl border-l border-slate-100 dark:border-slate-800 transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
 
           <div className="flex flex-col overflow-hidden h-full">
             <div className="flex items-center justify-between mb-6 shrink-0">
               <div className="flex items-center gap-2 pl-2">
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-lg shadow-sm">S</div>
+                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-sm shrink-0">
+                  <Wallet size={16} strokeWidth={2.5} />
+                </div>
                 <h1 className="text-xl font-bold text-slate-900 dark:text-white">Spent.io</h1>
               </div>
               <button
@@ -92,7 +96,7 @@ function Layout() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-6 pr-1 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto space-y-5 pr-1 custom-scrollbar">
               <div>
                 <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-2">Core Hub</span>
                 <nav className="space-y-1">
@@ -113,6 +117,9 @@ function Layout() {
                   <SidebarLink icon={<Calculator size={18} />} label="Calculator" active={location.pathname === '/Calculator'} onClick={() => handleMobileNav('/Calculator')} />
                 </nav>
               </div>
+
+              {/* EXTERNAL PWA COMPONENT MOUNTED HERE (MOBILE) */}
+              <InstallPWAButton />
             </div>
           </div>
 
@@ -130,7 +137,7 @@ function Layout() {
         </aside>
       </div>
 
-      {/* PERMANENT DESKTOP SIDEBAR VIEW (Always left-aligned on computers) */}
+      {/* PERMANENT DESKTOP SIDEBAR VIEW */}
       <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800 p-5 flex flex-col justify-between hidden md:flex h-screen sticky top-0 shrink-0 transition-colors duration-200">
         <div className="flex flex-col overflow-hidden">
 
@@ -147,7 +154,7 @@ function Layout() {
             <ThemeToggle />
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-6 pr-1 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto space-y-5 pr-1 custom-scrollbar">
             <div>
               <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-2">Core Hub</span>
               <nav className="space-y-1">
@@ -168,6 +175,9 @@ function Layout() {
                 <SidebarLink icon={<Calculator size={18} />} label="Calculator" active={location.pathname === '/Calculator'} onClick={() => navigate('/Calculator')} />
               </nav>
             </div>
+
+            {/* EXTERNAL PWA COMPONENT MOUNTED HERE (DESKTOP) */}
+            <InstallPWAButton />
           </div>
         </div>
 
@@ -184,7 +194,8 @@ function Layout() {
       </aside>
 
       {/* DYNAMIC VIEWPORT CONTENT HUB */}
-      <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full overflow-y-auto h-[calc(100vh-60px)] md:h-screen">        <Outlet />
+      <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full overflow-y-auto h-[calc(100vh-60px)] md:h-screen">
+        <Outlet />
         <ToastContainer
           position="top-right"
           autoClose={5000}
@@ -200,6 +211,7 @@ function Layout() {
           z-index={9999}
         />
       </main>
+      
       <ConfirmModal
         isOpen={isDeleteModalOpen}
         title="Logging Out?"

@@ -13,8 +13,8 @@ import {
   Smartphone,
   PlayCircle
 } from 'lucide-react';
-import Desktop from '../../image-vids/Desktop.png'
-import Mobile from '../../image-vids/mobile.png'
+import Desktop from '/Desktop.png'
+import Mobile from '/mobile.png'
 
 function Home() {
   const navigate = useNavigate();

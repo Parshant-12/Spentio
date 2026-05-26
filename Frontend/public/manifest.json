@@ -1,0 +1,17 @@
+{
+  "short_name": "Spentio",
+  "name": "Spentio - Smart Expense Tracker",
+  "icons": [
+    {
+      "src": "/wallet.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/dashboard",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "display": "standalone",
+  "orientation": "portrait"
+}
