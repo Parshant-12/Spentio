@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import Loader from '../Layouts/Loader';
+import ConfirmModal from '../Layouts/Confirm';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -29,6 +30,10 @@ function Udhar() {
   const [totalOwesMe, setTotalOwesMe] = useState(0);
   const [totalIOwe, setTotalIOwe] = useState(0);
   const [netBalance, setNetBalance] = useState(0);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Form input state management
   const [formData, setFormData] = useState({
@@ -63,7 +68,7 @@ function Udhar() {
       } catch (error) {
         console.error('Error fetching udhar entries:', error);
         toast.error('Failed to fetch udhar entries');
-      } finally{
+      } finally {
         setIsLoading(false);
       }
     };
@@ -127,14 +132,14 @@ function Udhar() {
     } catch (error) {
       console.error('Error logging udhar entry:', error);
       toast.error('An error occurred while saving the udhar entry');
-    } finally{
+    } finally {
       setIsLoading(false);
     }
   };
 
   // Handle Deletion/Settlement
   const handleDelete = async (id) => {
-    setIsLoading(true);
+    setIsDeleting(true);
     try {
       const response = await fetch(`${BASE_URL}/udhar/${id}`, {
         method: 'DELETE',
@@ -152,8 +157,10 @@ function Udhar() {
     } catch (error) {
       console.error('Error marking transaction as settled:', error);
       toast.error('An error occurred while marking the transaction as settled');
-    } finally{
-      setIsLoading(false);
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
     }
   };
 
@@ -180,7 +187,7 @@ function Udhar() {
     return `${day}/${month}/${year}`;
   };
   if (isLoading) {
-    return <Loader message="Calculating your budgets..." />;
+    return <Loader />;
   }
 
   return (
@@ -291,7 +298,10 @@ function Udhar() {
 
                         {/* Settle Up Action Button visible on row hover layout blocks */}
                         <button
-                          onClick={() => handleDelete(person._id)}
+                          onClick={() => {
+                            setItemToDelete(person._id);
+                            setIsDeleteModalOpen(true);
+                          }}
                           className="p-2 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 rounded-lg cursor-pointer transition-all duration-150"
                           title="Mark Settled"
                         >
@@ -362,7 +372,7 @@ function Udhar() {
                   Absolute Amount (INR)
                 </label>
                 <input
-                  onWheel={(e)=> e.target.blur()}
+                  onWheel={(e) => e.target.blur()}
                   type="number" id="amount" placeholder="₹ 0.00" required
                   value={formData.amount} onChange={handleInputChange}
                   className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 text-slate-900 dark:text-white transition-all font-semibold placeholder-slate-400 dark:placeholder-slate-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -393,8 +403,16 @@ function Udhar() {
         </div>
 
       </div>
-
-    </div>
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        isLoading={isDeleting}
+        title="Confirm Settlment?"
+        message={`Are you sure you want to mark this Uhar as settled.`}
+        confirmText="Yes"
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+      />
+    </div >
   );
 }
 

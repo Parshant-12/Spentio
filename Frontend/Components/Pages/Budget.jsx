@@ -217,7 +217,7 @@ function Budget() {
     setTriggerRefresh((prev) => prev + 1);
   };
   if (isLoading) {
-    return <Loader message="Calculating your budgets..." />;
+    return <Loader />;
   }
 
   return (
@@ -455,8 +455,8 @@ function Budget() {
       <ConfirmModal
         isOpen={isDeleteModalOpen}
         isLoading={isDeleting}
-        title="Delete Transaction?"
-        message={`Are you sure you want to delete this Budget? This action cannot be undone.`}
+        title="Delete Budget?"
+        message={`Are you sure you want to delete '${itemToDelete}' Budget? This action cannot be undone.`}
         confirmText="Yes, Delete"
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteCategory}

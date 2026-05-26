@@ -48,7 +48,7 @@ router.put('/udhar/:id', async (req, res) => {
         const { id } = req.params;
         const data = req.body;
         data.user = req.user.id;
-        const response = await Udhar.findOneAndUpdate({ _id: id, user: req.user.id }, data, { new: true });
+        const response = await Udhar.findOneAndUpdate({ _id: id, user: req.user.id }, data, { returnDocument:'after' });
         if (!response) {
             return res.status(404).json({ error: "Udhar not found" });
         }

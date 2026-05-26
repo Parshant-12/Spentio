@@ -8,7 +8,7 @@ router.post('/budget', async (req, res) => {
     try {
         const totalAmount = req.body;
         const {id} = req.user;
-        const response = await BudgetTotalAmount.findOneAndUpdate({ user: id }, totalAmount, { new: true });
+        const response = await BudgetTotalAmount.findOneAndUpdate({ user: id }, totalAmount, { returnDocument:'after'});
         res.status(201).json({ message: "Budget added successfully" });
     } catch (err) {
         res.status(500).json({ error: "Failed to add budget" });

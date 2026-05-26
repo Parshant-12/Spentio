@@ -1,7 +1,7 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 
-export default function Spinner({ message = "Loading..." }) {
+export default function Loader({ message = "Loading..." }) {
   return (
     <div className="flex flex-col items-center justify-center p-8 space-y-4 h-full w-full">
       {/* The animate-spin class handles the rotation automatically */}

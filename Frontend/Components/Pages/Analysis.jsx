@@ -137,7 +137,7 @@ function Analysis() {
   const topCategoriesPercentage = metrics.currentTotal > 0 ? ((topCategoriesSum / metrics.currentTotal) * 100).toFixed(0) : 0;
 
   if (isLoading) {
-    return <Loader message="Calculating your budgets..." />;
+    return <Loader />;
   }
 
   return (

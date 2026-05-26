@@ -21,7 +21,7 @@ function AddTransaction() {
   // Form State - Upgraded with transfer fields
   const [formData, setFormData] = useState({
     amount: '',
-    type: '', // 'expense' | 'income' | 'transfer'
+    type: 'expense', // 'expense' | 'income' | 'transfer'
     category: '',
     date: new Date().toISOString().split('T')[0],
     description: '',
@@ -48,7 +48,6 @@ function AddTransaction() {
 
   // Automatically reset category/accounts to safe defaults when transaction type shifts
   useEffect(() => {
-    // Only auto-set categories if we are NOT in edit mode
     if (!isEditMode) {
       if (formData.type === 'expense') {
         setFormData(prev => ({ ...prev, category: 'Food & Groceries' }));
@@ -129,29 +128,30 @@ function AddTransaction() {
 
   // Mock AI OCR Camera Scanner Engine
   const handleSimulateScan = () => {
-    setIsScanning(true);
-    setScanComplete(false);
+    toast.warning("This feature is under development.")
+    // setIsScanning(true);
+    // setScanComplete(false);
 
-    setTimeout(() => {
-      setIsScanning(false);
-      setScanComplete(true);
-      setFormData({
-        amount: '450.00',
-        type: 'expense',
-        category: 'Food & Groceries',
-        date: '2026-05-17',
-        description: 'Starbucks Coffee & Sandwich (AI Scanned)',
-        fromAccount: 'hdfc_bank',
-        toAccount: 'groww_wallet'
-      });
-      setTimeout(() => {
-        setMethod('manual');
-        setScanComplete(false);
-      }, 1000);
-    }, 2500);
+    // setTimeout(() => {
+    //   setIsScanning(false);
+    //   setScanComplete(true);
+    //   setFormData({
+    //     amount: '450.00',
+    //     type: 'expense',
+    //     category: 'Food & Groceries',
+    //     date: '2026-05-17',
+    //     description: 'Starbucks Coffee & Sandwich (AI Scanned)',
+    //     fromAccount: 'hdfc_bank',
+    //     toAccount: 'groww_wallet'
+    //   });
+    //   setTimeout(() => {
+    //     setMethod('manual');
+    //     setScanComplete(false);
+    //   }, 1000);
+    // }, 2500);
   };
   if (isLoading) {
-    return <Loader message="Calculating your budgets..." />;
+    return <Loader />;
   }
 
   return (
@@ -355,7 +355,7 @@ function AddTransaction() {
                 className="flex items-center gap-2 bg-slate-900 dark:bg-slate-700 text-white font-semibold text-xs px-4 py-2.5 rounded-xl hover:bg-slate-800 dark:hover:bg-slate-600 shadow-sm transition-all duration-150 cursor-pointer"
               >
                 <Sparkles size={14} className="text-amber-400 fill-amber-400" />
-                Simulate AI Receipt Scan
+                Open Camera
               </button>
             </div>
           )}

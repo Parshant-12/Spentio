@@ -107,7 +107,7 @@ function Dashboard() {
     .slice(0, 4);
 
   if (isLoading) {
-    return <Loader message="Calculating your budgets..." />;
+    return <Loader />;
   }
 
   return (

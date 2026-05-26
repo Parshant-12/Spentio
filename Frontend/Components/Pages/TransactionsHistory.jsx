@@ -143,7 +143,7 @@ function Transactions() {
     window.URL.revokeObjectURL(url);
   };
   if (isLoading) {
-    return <Loader message="Calculating your budgets..." />;
+    return <Loader />;
   }
   return (
     <div className="space-y-6 transition-colors duration-200">
@@ -326,7 +326,7 @@ function Transactions() {
         isOpen={isDeleteModalOpen}
         isLoading={isDeleting}
         title="Delete Transaction?"
-        message={`Are you sure you want to delete this transaction? This action cannot be undone and will affect your budget calculations.`}
+        message={`Are you sure you want to delete this transaction? This will affect your budget calculations.`}
         confirmText="Yes, Delete"
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}

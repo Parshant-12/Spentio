@@ -163,7 +163,7 @@ function BillsAndEMIs() {
 
   const totalOutstandingDebt = loans.reduce((acc, c) => acc + Number(c.remainingBalance || 0), 0);
   if (isLoading) {
-    return <Loader message="Calculating your budgets..." />;
+    return <Loader />;
   }
 
   return (
@@ -388,7 +388,7 @@ function BillsAndEMIs() {
         isLoading={isDeleting}
         // Capitalize the first letter for the title
         title={`Delete ${itemToDelete?.type === 'subscription' ? 'Subscription' : 'Loan'}?`}
-        message={`Are you sure you want to delete "${itemToDelete?.name}"? This action cannot be undone and will affect your monthly fixed outflow.`}
+        message={`Are you sure you want to delete "${itemToDelete?.name}"? This will affect your monthly fixed outflow.`}
         confirmText="Yes, Delete"
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={executeDelete} // Attach the unified function here

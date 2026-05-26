@@ -91,7 +91,7 @@ function Settings() {
   };
 
   if (isLoading) {
-    return <Loader message="Fetching your configuration..." />;
+    return <Loader />;
   }
 
   return (
