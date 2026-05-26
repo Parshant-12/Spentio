@@ -1,6 +1,6 @@
-// install_button.jsx
 import React, { useState, useEffect } from 'react';
 import { Smartphone } from 'lucide-react';
+import { track } from '@vercel/analytics'; // 1. Added Vercel Analytics import
 
 function InstallPWAButton() {
   const [supportsPWA, setSupportsPWA] = useState(false);
@@ -16,20 +16,33 @@ function InstallPWAButton() {
       return;
     }
 
-    const handler = (e) => {
+    // Listener 1: Wait for the browser to allow installation
+    const promptHandler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setSupportsPWA(true);
     };
+    window.addEventListener('beforeinstallprompt', promptHandler);
 
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    // Listener 2: THE TRACKER - Fires the exact second they install
+    const installHandler = () => {
+      console.log('✅ Success! The user installed Spentio.');
+      track('pwa_installed'); // 2. Sends the install event to your Vercel Dashboard
+    };
+    window.addEventListener('appinstalled', installHandler);
+
+    // Cleanup listeners when the component unmounts
+    return () => {
+      window.removeEventListener('beforeinstallprompt', promptHandler);
+      window.removeEventListener('appinstalled', installHandler);
+    };
   }, []);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
+    
     if (outcome === 'accepted') {
       setDeferredPrompt(null);
       setSupportsPWA(false);
@@ -47,7 +60,7 @@ function InstallPWAButton() {
       >
         <div className="flex items-center gap-3">
           <Smartphone size={18} className="text-amber-500 group-hover:scale-110 transition-transform" />
-          <span>Install App</span>
+          <span>Get Desktop App</span>
         </div>
         <span className="bg-amber-500 dark:bg-amber-400 text-white dark:text-slate-950 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md tracking-wider shadow-xs">Free</span>
       </button>
