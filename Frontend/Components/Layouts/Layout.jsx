@@ -17,6 +17,7 @@ import {
   Menu,
   X
 } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 
 // Adjust these import paths if your files are in different folders
 import ConfirmModal from '../Layouts/Confirm';
@@ -220,6 +221,7 @@ function Layout() {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleLogout}
       />
+      <Analytics />
     </div>
   );
 }

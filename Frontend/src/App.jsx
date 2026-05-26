@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Login from '../Components/Authentication/Login';
 import Signup from '../Components/Authentication/SignUp';
 import Layout from '../Components/Layouts/Layout';
@@ -17,20 +17,34 @@ import PrivateRoute from '../Components/Layouts/PrivateRoutes';
 import ForgotPassword from '../Components/Authentication/ForgotPassword';
 import ResetPassword from '../Components/Authentication/ResetPassword';
 import Home from '../Components/Pages/Home';
-import ScrollTotop from '../Components/Layouts/ScrollTotop'
+import ScrollTotop from '../Components/Layouts/ScrollTotop';
+
+// 1. NEW COMPONENT: Public-Only Route Guard
+// If a user has a token, it intercepts their navigation and pushes them to the Dashboard.
+const PublicRoute = () => {
+  const token = localStorage.getItem('token');
+  return token ? <Navigate to="/Dashboard" replace /> : <Outlet />;
+};
 
 function App() {
   return (
     <Router>
       <ScrollTotop />
       <Routes>
-
-        <Route path='/reset-password/:token' element={<ResetPassword/>} />
-        <Route path='/ForgotPassword' element={<ForgotPassword/>}/>
-        <Route path='/Login' element={<Login />} />
-        <Route path='/SignUp' element={<Signup />} />
+        
+        {/* COMPLETELY OPEN ROUTES */}
+        {/* Anyone can view the landing page or use a secure password reset link token link */}
         <Route path='/' element={<Home/>}/>
+        <Route path='/reset-password/:token' element={<ResetPassword/>} />
 
+        {/* GUEST ONLY ROUTES (Auto-Redirects Authenticated Users to Dashboard) */}
+        <Route element={<PublicRoute />}>
+          <Route path='/Login' element={<Login />} />
+          <Route path='/SignUp' element={<Signup />} />
+          <Route path='/ForgotPassword' element={<ForgotPassword/>}/>
+        </Route>
+
+        {/* AUTHENTICATED ONLY PROTECTED ROUTES */}
         <Route element={<PrivateRoute />}>
           <Route element={<Layout />}>
             <Route path='/Dashboard' element={<Dashboard />} />
@@ -46,6 +60,7 @@ function App() {
             <Route path='/Calculator' element={<Calculator />} />
           </Route>
         </Route>
+
       </Routes>
     </Router>
   );
