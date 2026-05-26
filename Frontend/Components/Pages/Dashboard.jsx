@@ -22,8 +22,7 @@ function Dashboard() {
   const [transactions, setTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Default monthly budget limit (You can fetch this from your DB later)
-  const monthlyBudget = 50000;
+  const [monthlyBudget,setMonthlyBudget] = useState(50000);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -44,12 +43,31 @@ function Dashboard() {
       } catch (error) {
         console.error("Dashboard Fetch Error:", error);
         toast.error("Could not load dashboard data.");
-      } finally {
-        setIsLoading(false);
       }
     };
-
+    const fetchGlobalLimit = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/budget/global`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch global limit');
+        }
+        const data = await response.json();
+        setMonthlyBudget(data.totalAmount);
+      } catch (error) {
+        console.error("Fetch error:", error);
+        toast.error('Server error.');
+      } finally {
+      }
+    }
+    fetchGlobalLimit();
     fetchDashboardData();
+    setIsLoading(false);
   }, []);
 
   // --- CALCULATIONS ---
