@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ToastContainer, toast, Bounce } from 'react-toastify';
+import { Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Receipt,
@@ -13,6 +14,7 @@ import {
   ShieldCheck,
   LogOut,
   Calculator,
+  Wallet,
   Menu,
   X
 } from 'lucide-react';
@@ -45,12 +47,14 @@ function Layout() {
 
       {/* MOBILE TOP NAVIGATION BAR HEADER */}
       <header className="w-full bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 px-5 py-4 flex items-center justify-between md:hidden sticky top-0 z-40 shadow-sm transition-colors duration-200">
-        <a href="/dashboard" className='cursor-pointer'>
+        <Link to="/dashboard" className='cursor-pointer'>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-base shadow-sm">S</div>
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-sm shrink-0">
+              <Wallet size={16} strokeWidth={2.5} />
+            </div>
             <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Spent.io</h1>
           </div>
-        </a>
+        </Link>
 
         {/* Toggle button and Hamburger grouped on the right */}
         <div className="flex items-center gap-2">
@@ -132,12 +136,14 @@ function Layout() {
 
           {/* Logo and Toggle Grouped Together */}
           <div className="flex items-center justify-between mb-6 pl-2 shrink-0">
-            <a href="/dashboard">
+            <Link to="/dashboard">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-lg shadow-sm">S</div>
+                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-sm shrink-0">
+                  <Wallet size={16} strokeWidth={2.5} />
+                </div>
                 <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">Spent.io</h1>
               </div>
-            </a>
+            </Link>
             <ThemeToggle />
           </div>
 
