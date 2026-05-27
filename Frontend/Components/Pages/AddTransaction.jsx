@@ -57,6 +57,11 @@ function AddTransaction() {
       delete payload.category;
     }
 
+    if(payload.type === 'income'){
+      payload.description = payload.category;
+      payload.category = 'Income';
+    }
+
     if (!payload.type) {
       toast.warning('Please select a transaction type.');
       return;

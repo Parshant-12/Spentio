@@ -42,7 +42,7 @@ function Dashboard() {
         setTransactions(data);
       } catch (error) {
         console.error("Dashboard Fetch Error:", error);
-        toast.error("Could not load dashboard data.");
+        toast.error("Could not load dashboard data."); 
       }
     };
     const fetchGlobalLimit = async () => {
