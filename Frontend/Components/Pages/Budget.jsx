@@ -167,6 +167,13 @@ function Budget() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    const playSuccessSound = () => {
+      const audio = new Audio('/notification.mp3');
+      audio.volume = 0.8; // Keep it at 50% so it doesn't jump-scare the user
+      audio.play().catch(error => {
+        console.log("Audio play prevented:", error);
+      });
+    };
     if (modalType === 'global') {
       try {
         // 1. Added the full localhost URL so it hits Express
@@ -183,7 +190,7 @@ function Budget() {
           toast.error('Failed to update global limit.');
           return;
         }
-
+        playSuccessSound();
         toast.success(`Updated Limit to: ₹${budgetForm.limitAmount}`);
         setGlobalLimit(Number(budgetForm.limitAmount));
 
@@ -210,6 +217,7 @@ function Budget() {
         return;
       }
       toast.success(`Saved: ${budgetForm.category} at ₹${budgetForm.limitAmount}`);
+      playSuccessSound();
     }
     setIsLoading(false);
     setBudgetForm({ category: 'Food & Groceries', limitAmount: '' });
@@ -420,7 +428,7 @@ function Budget() {
                       <option value="Education & Skilling">Education & Skilling</option>
                       <option value="Travel & Cabs">Travel & Cabs</option>
                       <option value="Shopping">Shopping</option>
-                      <option value="Rent & PG/Hostel">Rent & PG/Hostel</option>
+                      <option value="Rent & PG">Rent & PG/Hostel</option>
                       <option value="Subscriptions & Entertainment">Subscriptions & Entertainment</option>
                       <option value="Investments & Savings">Investments & Savings</option>
                       <option value="Pharmacy & Medical">Medical</option>
@@ -435,7 +443,7 @@ function Budget() {
                   </label>
                   <input
                     min={1}
-                    onWheel={(e)=>e.target.blur()}
+                    onWheel={(e) => e.target.blur()}
                     type="number" id="limitAmount" placeholder="e.g. 50000" required
                     value={budgetForm.limitAmount} onChange={handleInputChange}
                     className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 text-slate-900 dark:text-white font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

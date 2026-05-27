@@ -97,6 +97,13 @@ function Udhar() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    const playSuccessSound = () => {
+      const audio = new Audio('/notification.mp3');
+      audio.volume = 0.8; // Keep it at 50% so it doesn't jump-scare the user
+      audio.play().catch(error => {
+        console.log("Audio play prevented:", error);
+      });
+    };
     if (!formData.type) {
       toast.warning('Please select an Operation Mode (Lent or Borrowed).');
       setIsLoading(false);
@@ -118,6 +125,7 @@ function Udhar() {
         body: JSON.stringify(payload)
       });
       if (response.ok) {
+        playSuccessSound();
         toast.success('Udhar entry saved successfully');
         setFormData({
           type: '',

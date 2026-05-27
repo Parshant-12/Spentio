@@ -87,6 +87,13 @@ function Transactions() {
   const handleDelete = async () => {
     if (!itemToDelete) return; // Safeguard
     setIsDeleting(true);
+    const playSuccessSound = () => {
+      const audio = new Audio('/notification.mp3');
+      audio.volume = 0.8; // Keep it at 50% so it doesn't jump-scare the user
+      audio.play().catch(error => {
+        console.log("Audio play prevented:", error);
+      });
+    };
     try {
       const response = await fetch(`${BASE_URL}/transaction/${itemToDelete}`, {
         method: 'DELETE',
@@ -100,6 +107,7 @@ function Transactions() {
       }
       setData((prevData) => prevData.filter((data) => data._id !== itemToDelete));
       toast.success('Transaction deleted successfully.');
+      playSuccessSound();
     } catch (error) {
       console.error('Error deleting transaction:', error);
       toast.error('Failed to delete transaction. Please try again.');

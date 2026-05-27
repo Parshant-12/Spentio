@@ -47,6 +47,13 @@ function AddTransaction() {
   const handleSubmit = async (e) => {
   e.preventDefault();
   setIsLoading(true);
+  const playSuccessSound = () => {
+    const audio = new Audio('/notification.mp3');
+    audio.volume = 0.8; // Keep it at 50% so it doesn't jump-scare the user
+    audio.play().catch(error => {
+      console.log("Audio play prevented:", error);
+    });
+  };
   try {
     // 1. Data cleanup before sending
     const payload = { ...formData };
@@ -84,6 +91,7 @@ function AddTransaction() {
 
     // 3. Handle Success & Budget Checking
     if (response.ok) {
+      playSuccessSound();
       toast.success(isEditMode ? 'Transaction updated successfully!' : 'Transaction added successfully!');
       if (payload.type === 'expense' && payload.category) {
         try {
@@ -279,7 +287,7 @@ function AddTransaction() {
                             <option value="Education & Skilling">Education & Skilling</option>
                             <option value="Travel & Cabs">Travel & Cabs</option>
                             <option value="Shopping">Shopping</option>
-                            <option value="Rent & PG/Hostel">Rent & PG/Hostel</option>
+                            <option value="Rent & PG">Rent & PG/Hostel</option>
                             <option value="Subscriptions & Entertainment">Subscriptions & Entertainment</option>
                             <option value="Investments & Savings">Investments & Savings</option>
                             <option value="Pharmacy & Medical">Pharmacy & Medical</option>
