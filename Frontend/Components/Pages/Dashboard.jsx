@@ -22,54 +22,54 @@ function Dashboard() {
   const [transactions, setTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [monthlyBudget,setMonthlyBudget] = useState(50000);
+  const [monthlyBudget, setMonthlyBudget] = useState(50000);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
+      const response = await fetch(`${BASE_URL}/transactions`, {
+        method: 'GET',
+        headers: {
+          'content-type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        cache: 'no-store'
+      });
+      if (!response.ok) throw new Error("Failed to fetch transactions");
+      return await response.json();
+    };
+
+    const fetchGlobalLimit = async () => {
+      const response = await fetch(`${BASE_URL}/budget/global`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch global limit');
+      return await response.json();
+    };
+
+    const loadAllData = async () => {
+      setIsLoading(true); // Start Loading
       try {
-        const response = await fetch(`${BASE_URL}/transactions`, {
-          method: 'GET',
-          headers: {
-            'content-type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          cache: 'no-store'
-        });
+        const [transactionsData, budgetData] = await Promise.all([
+          fetchDashboardData(),
+          fetchGlobalLimit()
+        ]);
 
-        if (!response.ok) throw new Error("Failed to fetch");
-
-        const data = await response.json();
-        setTransactions(data);
+        setTransactions(transactionsData);
+        setMonthlyBudget(budgetData.totalAmount);
       } catch (error) {
         console.error("Dashboard Fetch Error:", error);
-        toast.error("Could not load dashboard data."); 
+        toast.error("Could not load dashboard data.");
+      } finally {
+        setIsLoading(false);
       }
     };
-    const fetchGlobalLimit = async () => {
-      try {
-        const response = await fetch(`${BASE_URL}/budget/global`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch global limit');
-        }
-        const data = await response.json();
-        setMonthlyBudget(data.totalAmount);
-      } catch (error) {
-        console.error("Fetch error:", error);
-        toast.error('Server error.');
-      } finally {
-      }
-    }
-    fetchGlobalLimit();
-    fetchDashboardData();
-    setIsLoading(false);
-  }, []);
 
+    loadAllData();
+  }, []);
   // --- CALCULATIONS ---
   const now = new Date();
   const currentMonth = now.getMonth();
