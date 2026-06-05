@@ -1,21 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { User, Lock, Globe, Save, Loader2 } from 'lucide-react'; // Added Loader2
+import { User, Lock, Globe, Save, Mail, Copy, Check } from 'lucide-react'; 
 import { toast } from 'react-toastify';
 import Loader from '../Layouts/Loader';
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 import ConfirmModal from '../Layouts/Confirm';
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// Simple dictionary matching banks to their statement/alert sender addresses
+const BANK_DIRECTORY = {
+  none: { email: "", note: "Select a bank above to see its filter configurations." },
+  hdfc: { email: "alerts@hdfcbank.net", note: "Forward emails sent from alerts@hdfcbank.net" },
+  icici: { email: "transaction@icicibank.com", note: "Forward emails sent from transaction@icicibank.com" },
+  sbi: { email: "alerts@sbi.co.in", note: "Forward emails sent from alerts@sbi.co.in" },
+  groww: { email: "billing@groww.in", note: "Forward emails sent from billing@groww.in" }
+};
 
 function Settings() {
   const [isLoading, setIsLoading] = useState(true);
-
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [selectedBank, setSelectedBank] = useState('none');
 
   const [profile, setProfile] = useState({
     name: '',
     email: '',
     currency: 'INR',
     notifications: true,
-    password: ''
+    password: '',
+    inboundEmail: '' // Added to hold the unique user forwarding address
   });
 
   useEffect(() => {
@@ -38,7 +50,9 @@ function Settings() {
             email: result.data.email,
             currency: result.data.currency || 'INR',
             notifications: result.data.notifications ?? true,
-            password: ''
+            password: '',
+            // Fallback generated mapping if backend does not return a dedicated string
+            inboundEmail: result.data.inboundEmail || `add+${result.data._id || 'user'}@inbound.spentio.com`
           });
         }
       } catch (error) {
@@ -52,15 +66,21 @@ function Settings() {
     dataFetch();
   }, []);
 
+  const handleCopyAddress = () => {
+    if (!profile.inboundEmail) return;
+    navigator.clipboard.writeText(profile.inboundEmail);
+    setCopied(true);
+    toast.success("Forwarding address copied!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const handleSave = async (e) => {
     try {
-      // 1. Construct payload without password by default
       const payload = {
         currency: profile.currency,
         notifications: profile.notifications
       };
 
-      // 2. Only attach password if user typed something
       if (profile.password && profile.password.trim() !== '') {
         payload.password = profile.password;
       }
@@ -76,7 +96,6 @@ function Settings() {
 
       if (response.ok) {
         toast.success('Settings saved successfully!');
-        // 3. Clear the password field from the UI after successful save
         setProfile(prev => ({ ...prev, password: '' }));
       } else {
         const errData = await response.json();
@@ -160,7 +179,60 @@ function Settings() {
           </div>
         </div>
 
-        {/* SECTION 3: CREDENTIAL SECURITY */}
+        {/* NEW SECTION 3: AUTOMATED EXPENSE INGEST (EMAIL FORWARDING) */}
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-sm space-y-4 transition-colors duration-200">
+          <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-sm uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-3">
+            <Mail size={16} /> Automated Email Sync
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Your Unique Spentio Inbox</label>
+              <div className="flex gap-2">
+                <input
+                  readOnly
+                  type="text"
+                  value={profile.inboundEmail}
+                  className="w-full p-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-mono text-slate-600 dark:text-slate-300 cursor-not-allowed outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleCopyAddress}
+                  className="p-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl transition-all cursor-pointer flex items-center justify-center min-w-[48px]"
+                >
+                  {copied ? <Check size={18} className="text-emerald-500" /> : <Copy size={18} />}
+                </button>
+              </div>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
+                Any official bank receipt forwarded to this address will instantly appear on your dashboard via AI parsing.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-dashed border-slate-200 dark:border-slate-800">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Setup Guide by Bank Provider</label>
+              <select
+                value={selectedBank}
+                onChange={(e) => setSelectedBank(e.target.value)}
+                className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 cursor-pointer"
+              >
+                <option value="none">-- Select Your Bank Account --</option>
+                <option value="hdfc">HDFC Bank</option>
+                <option value="icici">ICICI Bank</option>
+                <option value="sbi">State Bank of India (SBI)</option>
+                <option value="groww">Groww Investments</option>
+              </select>
+
+              {selectedBank !== 'none' && (
+                <div className="mt-3 p-3 bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100/70 dark:border-indigo-900/50 rounded-xl text-xs text-slate-600 dark:text-slate-300 space-y-1">
+                  <p className="font-bold text-indigo-600 dark:text-indigo-400">Gmail Filter Step:</p>
+                  <p>Set a filter where <span className="font-mono bg-white dark:bg-slate-800 px-1 py-0.5 rounded border border-slate-200 dark:border-slate-700">From: {BANK_DIRECTORY[selectedBank].email}</span></p>
+                  <p className="text-slate-400 dark:text-slate-500 mt-1 italic">{BANK_DIRECTORY[selectedBank].note}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 4: CREDENTIAL SECURITY */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-sm space-y-4 transition-colors duration-200">
           <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-sm uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-3">
             <Lock size={16} /> Security Matrix
@@ -170,13 +242,12 @@ function Settings() {
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
                 Update Account Password
               </label>
-              {/* Added helper text here */}
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2 font-medium">
                 Leave blank to keep your current password.
               </p>
               <input
                 type="password"
-                value={profile.password} /* Binding value so it clears properly */
+                value={profile.password}
                 placeholder="••••••••••••"
                 onChange={(e) => setProfile({ ...profile, password: e.target.value })}
                 className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-all"
@@ -188,7 +259,7 @@ function Settings() {
         {/* SAVE EXECUTION BUTTON */}
         <button
           type="submit"
-          className="flex items-center justify-center gap-2 bg-indigo-600 dark:bg-indigo-500 px-6 py-3 rounded-xl text-white font-bold text-sm shadow-sm hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all ml-auto cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 dark:disabled:hover:bg-indigo-500"
+          className="flex items-center justify-center gap-2 bg-indigo-600 dark:bg-indigo-500 px-6 py-3 rounded-xl text-white font-bold text-sm shadow-sm hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all ml-auto cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
         >
           <Save size={16} />
           Save Configuration

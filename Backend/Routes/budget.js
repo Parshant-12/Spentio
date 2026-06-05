@@ -138,6 +138,9 @@ router.get('/budgets/summary', async (req, res) => {
 
 router.get('/budgets/track/:category', async (req, res) => {
     try {
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const firstDayOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
         const { category } = req.params;
         const budget = await Budget.findOne({ user:req.user.id , category });
         
@@ -150,7 +153,8 @@ router.get('/budgets/track/:category', async (req, res) => {
                 $match: {
                     user: new mongoose.Types.ObjectId(req.user.id),
                     category: category,
-                    type: 'expense'
+                    type: 'expense',
+                    date: { $gte: firstDayOfMonth, $lt: firstDayOfNextMonth }
                 }
             },
             {

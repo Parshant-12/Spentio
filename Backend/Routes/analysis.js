@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Transaction = require('../Models/transaction'); // Adjust path to match your folder structure
+const Transaction = require('../Models/transaction');
 const mongoose = require('mongoose');
 
 router.get('/analysis', async (req, res) => {
