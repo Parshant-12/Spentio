@@ -50,6 +50,10 @@ app.use('/', fetchUser, chatRoutes);
 const settingsRoutes = require('./Routes/settings');
 app.use('/',fetchUser, settingsRoutes);
 
+app.get('/ping', (req, res) => {
+  res.status(200).json({ message: 'Server is awake' });
+});
+
 app.listen(process.env.PORT || 3000, () => {
     console.log(`Server is running on port ${process.env.PORT}`);
 });
