@@ -180,7 +180,7 @@ function Settings() {
         </div>
 
         {/* NEW SECTION 3: AUTOMATED EXPENSE INGEST (EMAIL FORWARDING) */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-sm space-y-4 transition-colors duration-200">
+        <div className="bg-white hidden dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-sm space-y-4 transition-colors duration-200">
           <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-sm uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-3">
             <Mail size={16} /> Automated Email Sync
           </div>
