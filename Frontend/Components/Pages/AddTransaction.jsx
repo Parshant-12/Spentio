@@ -296,6 +296,7 @@ function AddTransaction() {
                         ) : (
                           <>
                             <option value="Salary">Primary Salary</option>
+                            <option value="Pocket Money">Pocket Money</option>
                             <option value="Freelance">Freelance Yield</option>
                             <option value="Investments">Market Dividends/Groww</option>
                             <option value="Peer_refund">Friend Remittance/Udhar</option>
