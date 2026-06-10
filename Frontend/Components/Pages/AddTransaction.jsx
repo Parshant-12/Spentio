@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { PenTool, Camera, Sparkles, UploadCloud, Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
+import Webcam from 'react-webcam'; // Added Webcam
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 import Loader from '../Layouts/Loader';
 
@@ -10,15 +11,19 @@ function AddTransaction() {
   const navigate = useNavigate();
   const location = useLocation();
   const [method, setMethod] = useState('manual'); // 'manual' or 'camera'
+
+  // Camera & Scan States
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
-
+  const [isCameraActive, setIsCameraActive] = useState(false); // Controls full-screen overlay
+  const webcamRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const editData = location.state?.editData;
   const [isEditMode, setIsEditMode] = useState(!!editData);
   const [editId, setEditId] = useState(editData?._id || null);
 
-  // Form State - Upgraded with transfer fields
+  // Form State
   const [formData, setFormData] = useState({
     amount: editData?.amount || '',
     type: editData?.type || 'expense',
@@ -29,7 +34,6 @@ function AddTransaction() {
     toAccount: editData?.toAccount || ''
   });
 
-  // Automatically reset category/accounts to safe defaults when transaction type shifts
   useEffect(() => {
     if (!isEditMode) {
       if (formData.type === 'expense') {
@@ -45,134 +49,186 @@ function AddTransaction() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsLoading(true);
-  const playSuccessSound = () => {
-    const audio = new Audio('/notification.mp3');
-    audio.volume = 0.8; // Keep it at 50% so it doesn't jump-scare the user
-    audio.play().catch(error => {
-      console.log("Audio play prevented:", error);
-    });
-  };
-  try {
-    // 1. Data cleanup before sending
-    const payload = { ...formData };
-    if (payload.type !== 'transfer') {
-      delete payload.fromAccount;
-      delete payload.toAccount;
-    } else if (payload.type === 'transfer') {
-      delete payload.category;
-    }
+    e.preventDefault();
+    setIsLoading(true);
+    const playSuccessSound = () => {
+      const audio = new Audio('/notification.mp3');
+      audio.volume = 0.8;
+      audio.play().catch(error => console.log("Audio play prevented:", error));
+    };
 
-    if(payload.type === 'income'){
-      payload.description = payload.category;
-      payload.category = 'Income';
-    }
+    try {
+      const payload = { ...formData };
+      if (payload.type !== 'transfer') {
+        delete payload.fromAccount;
+        delete payload.toAccount;
+      } else if (payload.type === 'transfer') {
+        delete payload.category;
+      }
 
-    if (!payload.type) {
-      toast.warning('Please select a transaction type.');
-      return;
-    }
+      if (payload.type === 'income') {
+        payload.description = payload.category;
+        payload.category = 'Income';
+      }
 
-    const url = isEditMode
-      ? `${BASE_URL}/transaction/${editId}`
-      : `${BASE_URL}/transactions`;
+      if (!payload.type) {
+        toast.warning('Please select a transaction type.');
+        return;
+      }
 
-    const httpMethod = isEditMode ? 'PUT' : 'POST';
+      const url = isEditMode
+        ? `${BASE_URL}/transaction/${editId}`
+        : `${BASE_URL}/transactions`;
 
-    const response = await fetch(url, {
-      method: httpMethod,
-      headers: {
-        'content-type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify(payload)
-    });
+      const httpMethod = isEditMode ? 'PUT' : 'POST';
 
-    // 3. Handle Success & Budget Checking
-    if (response.ok) {
-      playSuccessSound();
-      toast.success(isEditMode ? 'Transaction updated successfully!' : 'Transaction added successfully!');
-      if (payload.type === 'expense' && payload.category) {
-        try {
-          // Note: Safely encode the category string to handle spaces/ampersands (e.g. "Food & Groceries")
-          const safeCategory = encodeURIComponent(payload.category);
-          
-          const budgetResponse = await fetch(`${BASE_URL}/budgets/track/${safeCategory}`, {
-            method: 'GET',
-            headers: {
-              'content-type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-          });
+      const response = await fetch(url, {
+        method: httpMethod,
+        headers: {
+          'content-type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(payload)
+      });
 
-          if (budgetResponse.ok) {
-            const budgetData = await budgetResponse.json();
-            
-            // Calculate percentage. The backend 'spent' ALREADY includes the transaction we just added!
-            const percentage = (budgetData.spent / budgetData.limit) * 100;
+      if (response.ok) {
+        playSuccessSound();
+        toast.success(isEditMode ? 'Transaction updated successfully!' : 'Transaction added successfully!');
+        if (payload.type === 'expense' && payload.category) {
+          try {
+            const safeCategory = encodeURIComponent(payload.category);
+            const budgetResponse = await fetch(`${BASE_URL}/budgets/track/${safeCategory}`, {
+              method: 'GET',
+              headers: {
+                'content-type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              },
+            });
 
-            // VERY IMPORTANT: Check the highest condition (100) BEFORE checking the lower condition (80)
-            if (percentage >= 100) {
-              toast.error(`Budget Exceeded! You are over your ₹${budgetData.limit} limit.`);
-            } else if (percentage >= 80) {
-              toast.warning(`Heads up! You have used ${percentage.toFixed(0)}% of your budget.`);
+            if (budgetResponse.ok) {
+              const budgetData = await budgetResponse.json();
+              const percentage = (budgetData.spent / budgetData.limit) * 100;
+              if (percentage >= 100) {
+                toast.error(`Budget Exceeded! You are over your ₹${budgetData.limit} limit.`);
+              } else if (percentage >= 80) {
+                toast.warning(`Heads up! You have used ${percentage.toFixed(0)}% of your budget.`);
+              }
             }
+          } catch (budgetError) {
+            console.error("Failed to fetch budget:", budgetError);
           }
-        } catch (budgetError) {
-          console.error("Failed to fetch budget for notifications:", budgetError);
-          // We silently catch this error so it doesn't break the UI if the budget check fails
         }
-      }
 
-      if (isEditMode) {
-        navigate('/TransactionsHistory');
+        if (isEditMode) {
+          navigate('/TransactionsHistory');
+        } else {
+          setFormData({
+            amount: '',
+            type: 'expense',
+            category: 'Food & Groceries',
+            date: new Date().toISOString().split('T')[0],
+            description: '',
+            fromAccount: '',
+            toAccount: ''
+          });
+        }
       } else {
-        // Tip: Reset type to 'expense' instead of '' so the form dropdown doesn't break!
-        setFormData({
-          amount: '',
-          type: 'expense', 
-          category: 'Food & Groceries',
-          date: new Date().toISOString().split('T')[0],
-          description: '',
-          fromAccount: '',
-          toAccount: ''
-        });
+        toast.error(`Failed to ${isEditMode ? 'update' : 'add'} transaction.`);
       }
-    } else {
-      toast.error(`Failed to ${isEditMode ? 'update' : 'add'} transaction.`);
+    } catch (error) {
+      console.error('Error saving transaction:', error);
+      toast.error('Network error occurred.');
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error('Error saving transaction:', error);
-    toast.error('Network error occurred.');
-  } finally {
-    setIsLoading(false);
   }
-}
 
-  // Mock AI OCR Camera Scanner Engine
-  const handleSimulateScan = () => {
-    toast.warning("This feature is under development.")
-    // setIsScanning(true);
-    // setScanComplete(false);
+  const processReceiptData = async (base64Image) => {
+    setIsCameraActive(false); // Close full-screen camera if it was open
+    setIsScanning(true);
 
-    // setTimeout(() => {
-    //   setIsScanning(false);
-    //   setScanComplete(true);
-    //   setFormData({
-    //     amount: '450.00',
-    //     type: 'expense',
-    //     category: 'Food & Groceries',
-    //     date: '2026-05-17',
-    //     description: 'Starbucks Coffee & Sandwich (AI Scanned)',
-    //     fromAccount: 'hdfc_bank',
-    //     toAccount: 'groww_wallet'
-    //   });
-    //   setTimeout(() => {
-    //     setMethod('manual');
-    //     setScanComplete(false);
-    //   }, 1000);
-    // }, 2500);
+    try {
+      const response = await fetch(`${BASE_URL}/scan-receipt`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ imageBase64: base64Image })
+      });
+
+      if (response.ok) {
+        const parsedData = await response.json();
+
+        setFormData(prev => ({
+          ...prev,
+          amount: parsedData.amount || prev.amount,
+          type: parsedData.type || prev.type,
+          category: parsedData.category || prev.category,
+          date: parsedData.date || prev.date,
+          description: parsedData.description || prev.description
+        }));
+
+        setIsScanning(false);
+        setScanComplete(true);
+        toast.success("Receipt parsed successfully!");
+
+        setTimeout(() => {
+          setMethod('manual');
+          setScanComplete(false);
+        }, 1200);
+
+      } else {
+        toast.error("AI vision engine failed to parse the receipt.");
+        setIsScanning(false);
+      }
+    } catch (error) {
+      console.error("OCR API Error:", error);
+      toast.error("Network error while connecting to AI engine.");
+      setIsScanning(false);
+    }
+  };
+  const captureAndProcessReceipt = () => {
+    const imageSrc = webcamRef.current.getScreenshot();
+    if (imageSrc) processReceiptData(imageSrc);
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onloadend = (event) => {
+      // 1. Create a virtual image object in memory
+      const img = new Image();
+
+      img.onload = () => {
+        // 2. Create a virtual canvas exactly the size of the image
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        // 3. Draw the image onto the canvas (this strips the original format)
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // 4. Force export as JPEG (0.85 = 85% quality to save bandwidth)
+        const jpegBase64 = canvas.toDataURL('image/jpeg', 0.85);
+
+        // 5. Send the strictly formatted JPEG to your API
+        processReceiptData(jpegBase64);
+      };
+
+      // Pass the raw uploaded file into the virtual image to trigger the onload above
+      img.src = event.target.result;
+    };
+
+    // Read the file from the user's phone
+    reader.readAsDataURL(file);
+
+    // Reset the input value so the same file can be selected again if needed
+    e.target.value = null;
   };
   if (isLoading) {
     return <Loader />;
@@ -180,6 +236,55 @@ function AddTransaction() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans antialiased md:p-10 transition-colors duration-200">
+
+      {/* --- FULL SCREEN CAMERA OVERLAY --- */}
+      {isCameraActive && (
+        <div className="fixed inset-0 z-[100] bg-black flex flex-col animate-in fade-in duration-200">
+          {/* Camera Viewfinder */}
+          <div className="flex-1 relative overflow-hidden bg-zinc-900 flex flex-col justify-center">
+            <Webcam
+              audio={false}
+              ref={webcamRef}
+              screenshotFormat="image/jpeg"
+              videoConstraints={{
+                facingMode: "environment",
+                width: { ideal: 4096 },
+                height: { ideal: 2160 },
+                advanced: [{ focusMode: "continuous" }]
+              }}
+              className="w-full h-full object-cover"
+            />
+            {/* Target reticle overlay */}
+            <div className="absolute inset-0 border-[2px] border-white/30 m-8 rounded-2xl pointer-events-none flex items-center justify-center">
+              <span className="text-white/60 text-sm font-semibold tracking-widest uppercase bg-black/40 px-4 py-1 rounded-full backdrop-blur-md">
+                Align Receipt
+              </span>
+            </div>
+          </div>
+
+          {/* Bottom Control Bar */}
+          <div className="h-36 bg-black flex items-center justify-between px-10 pb-8 pt-4">
+            <button
+              type="button"
+              onClick={() => setIsCameraActive(false)}
+              className="text-white/80 hover:text-white font-medium text-lg px-2 py-2"
+            >
+              Cancel
+            </button>
+
+            {/* Native-style Capture Button */}
+            <button
+              type="button"
+              onClick={captureAndProcessReceipt}
+              className="w-16 h-16 rounded-full bg-white border-[4px] border-zinc-400 outline outline-[3px] outline-white flex items-center justify-center transition-transform active:scale-90 shadow-xl"
+            ></button>
+
+            <div className="w-[70px]"></div> {/* Spacer to keep button centered */}
+          </div>
+        </div>
+      )}
+
+      {/* --- MAIN UI --- */}
       <div className="max-w-xl mx-auto">
         <button
           onClick={() => navigate('/dashboard')}
@@ -191,7 +296,6 @@ function AddTransaction() {
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/80 shadow-xl rounded-2xl p-4 md:p-8 transition-colors duration-200">
           <div className="mb-6">
-            {/* 4. DYNAMIC UI TEXT */}
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">
               {isEditMode ? 'Edit Transaction' : 'Add Transaction'}
             </h2>
@@ -202,7 +306,6 @@ function AddTransaction() {
             </p>
           </div>
 
-          {/* PARADIGM TOGGLE TABS */}
           <div className="grid grid-cols-2 gap-2 bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-xl mb-8 transition-colors duration-200">
             <button
               onClick={() => setMethod('manual')}
@@ -224,7 +327,6 @@ function AddTransaction() {
           {/* VIEW 1: MANUAL FORM LAYER */}
           {method === 'manual' && (
             <form onSubmit={handleSubmit} className="space-y-5">
-
               {/* FLOW PARAMETER SWITCHBOARD BUTTONS */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Transaction Type</label>
@@ -255,7 +357,7 @@ function AddTransaction() {
 
               {/* AMOUNT BLOCK */}
               <div>
-                <label htmlFor="amount" className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Absolute Magnitude (INR)</label>
+                <label htmlFor="amount" className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Amount (INR)</label>
                 <input
                   onWheel={(e) => e.target.blur()}
                   min={0}
@@ -264,10 +366,8 @@ function AddTransaction() {
                 />
               </div>
 
-              {/* DYNAMIC MIDDLE SECTION: ALTERNATING BASED ON SELECTION TYPE */}
+              {/* DYNAMIC MIDDLE SECTION */}
               <div className="space-y-5">
-
-                {/* DYNAMIC FIELD TYPE ROUTINE A: RENDER CATEGORIES FOR NON-TRANSFERS */}
                 {formData.type !== 'transfer' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -306,13 +406,12 @@ function AddTransaction() {
                       </select>
                     </div>
                     <div>
-                      <label htmlFor="date" className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Temporal Marker</label>
+                      <label htmlFor="date" className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Date</label>
                       <input type="date" id="date" value={formData.date} onChange={handleChange} required className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all font-medium" />
                     </div>
                   </div>
                 )}
 
-                {/* DYNAMIC FIELD TYPE ROUTINE B: RENDER INTER-ACCOUNT TRANSFERS ROUTE SELECTORS */}
                 {formData.type === 'transfer' && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -331,13 +430,12 @@ function AddTransaction() {
                     </div>
                   </div>
                 )}
-
               </div>
 
               {/* DESCRIPTION TEXT BLOCK */}
               {formData.type !== 'income' && (
                 <div>
-                  <label htmlFor="description" className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Descriptor Scope</label>
+                  <label htmlFor="description" className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Description</label>
                   <input
                     type="text" id="description" placeholder={formData.type === 'transfer' ? 'e.g., Transferring money to buy stocks' : 'e.g., Grocery store payload'} value={formData.description} onChange={handleChange} required
                     className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:bg-white dark:focus:bg-slate-700 text-slate-900 dark:text-white transition-all placeholder-slate-400 dark:placeholder-slate-500"
@@ -351,9 +449,11 @@ function AddTransaction() {
             </form>
           )}
 
-          {/* VIEW 2: DUMMY AI CAMERA INTERFACE */}
+          {/* VIEW 2: AI CAMERA INTERFACE */}
           {method === 'camera' && (
             <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl min-h-[340px] text-center relative overflow-hidden transition-colors duration-200">
+
+              {/* The Scanning Animations you already built */}
               {isScanning && (
                 <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xs flex flex-col items-center justify-center z-10 animate-fade-in">
                   <Loader2 className="w-10 h-10 text-indigo-600 dark:text-indigo-400 animate-spin mb-3" />
@@ -372,14 +472,37 @@ function AddTransaction() {
                   <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Hydrating manual entry data fields...</p>
                 </div>
               )}
-              <div className="w-16 h-16 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs rounded-2xl flex items-center justify-center text-slate-400 dark:text-slate-500 mb-4">
-                <UploadCloud size={28} />
+
+              <div className="flex flex-col items-center">
+                {/* The Hidden File Input */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+
+                {/* The Clickable UI Button */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-16 h-16 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md rounded-2xl flex items-center justify-center text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 mb-4 transition-all active:scale-95 cursor-pointer"
+                >
+                  <UploadCloud size={28} />
+                </button>
               </div>
               <h3 className="font-bold text-slate-900 dark:text-white text-base mb-1">Upload Receipt or Open Camera Viewfinder</h3>
-              <p className="text-xs text-slate-400 dark:text-slate-500 max-w-xs mb-6">Drop structural image objects here or take a live picture to pass vectors to our dummy AI computer vision engine model parsing framework.</p>
+<p className="text-xs text-slate-400 dark:text-slate-500 max-w-sm mb-6">
+  Upload or snap a photo of your receipt to instantly auto-fill your transaction. 
+  <span className="block mt-2 text-amber-500 dark:text-amber-400 font-medium">
+    ⚠️ Note: AI isn't perfect, so please double-check the details before saving!
+  </span>
+</p>
+              {/* Triggers the new full screen view */}
               <button
                 type="button"
-                onClick={handleSimulateScan}
+                onClick={() => setIsCameraActive(true)}
                 className="flex items-center gap-2 bg-slate-900 dark:bg-slate-700 text-white font-semibold text-xs px-4 py-2.5 rounded-xl hover:bg-slate-800 dark:hover:bg-slate-600 shadow-sm transition-all duration-150 cursor-pointer"
               >
                 <Sparkles size={14} className="text-amber-400 fill-amber-400" />
