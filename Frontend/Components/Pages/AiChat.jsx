@@ -152,7 +152,7 @@ function ChatCopilot() {
         </div>
 
         {/* MESSAGES SCROLLER */}
-        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/30 dark:bg-slate-900/50 flex flex-col">
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto py-6 px-3 space-y-4 bg-slate-50/30 dark:bg-slate-900/50 flex flex-col">
           {isLoadingHistory ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-2 text-slate-400 font-semibold text-sm">
               <Loader2 className="animate-spin text-indigo-500" size={24} />
@@ -163,7 +163,7 @@ function ChatCopilot() {
               {messages.map((msg) => {
                 const isAI = msg.sender === 'ai';
                 return (
-                  <div key={msg.id} className={`flex gap-3 max-w-[85%] ${isAI ? 'self-start' : 'self-end flex-row-reverse ml-auto'}`}>
+                  <div key={msg.id} className={`flex gap-1.5 max-w-[85%] ${isAI ? 'self-start' : 'self-end flex-row-reverse ml-auto'}`}>
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 shadow-xs
                       ${isAI ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20' : 'bg-slate-900 dark:bg-slate-700 text-white'}`}
                     >
@@ -171,7 +171,7 @@ function ChatCopilot() {
                     </div>
 
                     <div className="space-y-1">
-                      <div className={`p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm border whitespace-pre-wrap
+                      <div className={`p-2 rounded-2xl text-sm leading-relaxed shadow-sm border whitespace-pre-wrap
                         ${isAI
                           ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200/60 dark:border-slate-700 rounded-tl-none'
                           : 'bg-indigo-600 dark:bg-indigo-500 text-white border-indigo-600 dark:bg-indigo-500 rounded-tr-none'}`}
