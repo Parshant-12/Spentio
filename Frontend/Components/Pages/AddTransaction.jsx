@@ -493,12 +493,12 @@ function AddTransaction() {
                 </button>
               </div>
               <h3 className="font-bold text-slate-900 dark:text-white text-base mb-1">Upload Receipt or Open Camera Viewfinder</h3>
-<p className="text-xs text-slate-400 dark:text-slate-500 max-w-sm mb-6">
-  Upload or snap a photo of your receipt to instantly auto-fill your transaction. 
-  <span className="block mt-2 text-amber-500 dark:text-amber-400 font-medium">
-    ⚠️ Note: AI isn't perfect, so please double-check the details before saving!
-  </span>
-</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 max-w-sm mb-6">
+                Upload or snap a photo of your receipt to instantly auto-fill your transaction.
+                <span className="block mt-2 text-amber-500 dark:text-amber-400 font-medium">
+                  ⚠️ Note: AI isn't perfect, so please double-check the details before saving!
+                </span>
+              </p>
               {/* Triggers the new full screen view */}
               <button
                 type="button"
