@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, MessageSquare, Loader2, HelpCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import ReactMarkdown from 'react-markdown';
 
 function ChatCopilot() {
   const [messages, setMessages] = useState([]);
@@ -78,7 +79,7 @@ function ChatCopilot() {
     if (!textToSend.trim()) return;
 
     const currentTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-    
+
     // Optimistically add user text to view canvas immediately
     const userMsg = { id: Date.now(), sender: 'user', text: textToSend, time: currentTime };
     setMessages(prev => [...prev, userMsg]);
@@ -128,10 +129,10 @@ function ChatCopilot() {
 
   return (
     <div className="flex flex-col md:flex-row gap-6 h-[900px] md:h-[calc(100vh-120px)] transition-colors duration-200">
-      
+
       {/* CHAT VIEWPORT */}
       <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/80 rounded-2xl shadow-sm flex flex-col overflow-hidden h-full transition-colors duration-200">
-        
+
         {/* HEADER */}
         <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -171,15 +172,24 @@ function ChatCopilot() {
 
                     <div className="space-y-1">
                       <div className={`p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm border whitespace-pre-wrap
-                        ${isAI 
-                          ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200/60 dark:border-slate-700 rounded-tl-none' 
+                        ${isAI
+                          ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200/60 dark:border-slate-700 rounded-tl-none'
                           : 'bg-indigo-600 dark:bg-indigo-500 text-white border-indigo-600 dark:bg-indigo-500 rounded-tr-none'}`}
                       >
-                        {msg.text}
+                        <ReactMarkdown
+                          components={{
+                            // Re-add bullet points and spacing for lists
+                            ul: ({ node, ...props }) => <ul className="list-disc ml-4 space-y-1 mb-2" {...props} />,
+                            ol: ({ node, ...props }) => <ol className="list-decimal ml-4 space-y-1 mb-2" {...props} />,
+                            // Make bold text actually bold
+                            strong: ({ node, ...props }) => <span className="font-bold" {...props} />,
+                            // Add a little space between paragraphs
+                            p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />
+                          }}
+                        >
+                          {msg.text}
+                        </ReactMarkdown>
                       </div>
-                      <span className={`text-[10px] text-slate-400 dark:text-slate-500 font-bold block ${!isAI && 'text-right'}`}>
-                        {msg.time}
-                      </span>
                     </div>
                   </div>
                 );
@@ -201,7 +211,7 @@ function ChatCopilot() {
 
         {/* INPUT FORM */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
-          <form 
+          <form
             onSubmit={(e) => { e.preventDefault(); handleSendMessage(input); }}
             className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus-within:border-indigo-500 dark:focus-within:border-indigo-400 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:ring-2 focus-within:ring-indigo-100 dark:focus-within:ring-indigo-500/20 rounded-xl p-1.5 transition-all"
           >
@@ -229,7 +239,7 @@ function ChatCopilot() {
         <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 font-bold text-xs uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-3">
           <HelpCircle size={14} /> Try These Prompts
         </div>
-        
+
         <div className="flex flex-col gap-2">
           {quickPrompts.map((prompt, index) => (
             <button
