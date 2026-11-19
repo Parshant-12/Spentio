@@ -52,8 +52,8 @@ cd spent-io
 ```
 ### 2. Backend Setup
 ```bash
-cd server
-npm install
+cd .\Backend\
+npm install 
 ```
 ### Create a .env file in the server directory and add the following variables:
 ```bash
@@ -63,8 +63,8 @@ JWT_SECRET=your_super_secret_jwt_key
 ```
 ### Start the backend server:
 ```bash
-cd client
-npm install
+cd Backend
+nodemon .\server.js
 ```
 ### 3. Frontend Setup
 ```bash
