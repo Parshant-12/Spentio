@@ -355,7 +355,7 @@ function Analysis() {
 /* HELPER COMPONENTS */
 const BarColumn = ({ height, label, amount, active }) => (
   <div className="flex-1 flex flex-col items-center gap-2 h-full justify-end group cursor-pointer">
-    <span className="text-[10px] font-bold bg-slate-900 dark:bg-slate-700 text-white px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 shadow-xs mb-1">
+    <span className="text-[10px] font-bold bg-slate-900 dark:bg-slate-700 text-white px-1.5 py-0.5 rounded opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-150 shadow-xs mb-1">
       {amount}
     </span>
     <div

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Search, Filter, Trash2, Pencil, ArrowUpRight, ArrowDownLeft, RefreshCw, Download } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Loader from '../Layouts/Loader';
 import ConfirmModal from '../Layouts/Confirm';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -9,19 +9,22 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 function Transactions() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [typeFilter, setTypeFilter] = useState(searchParams.get('filter') || 'all');
   const [data, setData] = useState([]);
   const navigate = useNavigate();
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchTransactions = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`${BASE_URL}/transactions`, {
+        const url = typeFilter === 'all' ? `${BASE_URL}/transactions` : `${BASE_URL}/transactions/filter/${typeFilter}`;
+        const response = await fetch(url, {
           method: 'GET',
           headers: {
             'content-type': 'application/json',
@@ -30,39 +33,21 @@ function Transactions() {
         });
         const result = await response.json();
         setData(result);
-        // console.log(result);
       } catch (error) {
         console.error('Error fetching transaction data:', error);
       } finally {
         setIsLoading(false);
       }
     };
-    const fetchFilteredData = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(`${BASE_URL}/transactions/filter/${typeFilter}`, {
-          method: 'GET',
-          headers: {
-            'content-type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        const result = await response.json();
-        setData(result);
-      } catch (error) {
-        console.error('Error fetching filtered transaction data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    if (typeFilter === 'all') {
-      fetchData();
-    }
-    else {
-      fetchFilteredData();
-    }
+
+    fetchTransactions();
   }, [typeFilter]);
+
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     const searchData = async () => {
       try {
         let url = `${BASE_URL}/transactions/search/${searchTerm}`;

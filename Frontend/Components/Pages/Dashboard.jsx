@@ -147,9 +147,15 @@ function Dashboard() {
 
       {/* CORE METRICS GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <StatCard title="Total Available Balance" value="All-time" amount={`₹${totalBalance.toLocaleString('en-IN')}`} icon={<Wallet size={20} />} trendColor="text-indigo-600 dark:text-indigo-400" bgCircle="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" />
-        <StatCard title="Total Income" value="This Month" amount={`₹${totalIncome.toLocaleString('en-IN')}`} icon={<ArrowDownLeft size={20} />} trendColor="text-emerald-600 dark:text-emerald-400" bgCircle="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" />
-        <StatCard title="Total Expenses" value="This Month" amount={`₹${totalExpense.toLocaleString('en-IN')}`} icon={<ArrowUpRight size={20} />} trendColor="text-rose-600 dark:text-rose-400" bgCircle="bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400" />
+        <button onClick={() => navigate('/TransactionsHistory')}>
+          <StatCard title="Total Available Balance" value="All-time" amount={`₹${totalBalance.toLocaleString('en-IN')}`} icon={<Wallet size={20} />} trendColor="text-indigo-600 dark:text-indigo-400" bgCircle="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" />
+        </button>
+        <button onClick={() => navigate('/TransactionsHistory?filter=income')}>
+          <StatCard title="Total Income" value="This Month" amount={`₹${totalIncome.toLocaleString('en-IN')}`} icon={<ArrowDownLeft size={20} />} trendColor="text-emerald-600 dark:text-emerald-400" bgCircle="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" />
+        </button>
+        <button onClick={() => navigate('/TransactionsHistory?filter=expense')}>
+          <StatCard title="Total Expenses" value="This Month" amount={`₹${totalExpense.toLocaleString('en-IN')}`} icon={<ArrowUpRight size={20} />} trendColor="text-rose-600 dark:text-rose-400" bgCircle="bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400" />
+        </button>
       </div>
 
       {/* SECONDARY ROW GRID */}
@@ -267,7 +273,7 @@ function Dashboard() {
 /* SUB-COMPONENTS */
 const StatCard = ({ title, value, amount, icon, trendColor, bgCircle }) => (
   <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex items-center justify-between transition-colors duration-200">
-    <div className="space-y-1">
+    <div className="space-y-1 flex flex-col items-start">
       <span className="text-[11px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">{title}</span>
       <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{amount}</p>
       <span className={`text-xs block font-medium ${trendColor}`}>{value}</span>
